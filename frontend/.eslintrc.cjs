@@ -5,6 +5,7 @@ const config = {
     "project": true
   },
   "plugins": [
+    "eslint-plugin-react-compiler",
     "@typescript-eslint",
     "drizzle"
   ],
@@ -14,6 +15,7 @@ const config = {
     "plugin:@typescript-eslint/stylistic-type-checked"
   ],
   "rules": {
+    "react-compiler/react-compiler": "error",
     "@typescript-eslint/array-type": "off",
     "@typescript-eslint/consistent-type-definitions": "off",
     "@typescript-eslint/consistent-type-imports": [
