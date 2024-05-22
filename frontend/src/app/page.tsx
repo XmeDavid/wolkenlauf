@@ -7,7 +7,7 @@ import { CodeIcon, BoltIcon, GaugeIcon, CloudIcon, CheckIcon, ChevronDownIcon } 
 export default function HomePage() {
   return (
     <>
-      <main className="mx-auto my-12">
+      <main className="mx-auto my-12 min-h-screen">
         <div className="container grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div className="space-y-4">
             <h1 className="text-4xl font-bold tracking-tight">Unleash Your Coding Potential</h1>
@@ -243,7 +243,7 @@ export default function HomePage() {
         </div>
       </section>
       </main>
-      <footer className="bg-gray-900 py-8 text-white fixed bottom-0 w-full">
+      <footer className="bg-gray-900 py-8 text-white grow">
         <div className="container mx-auto px-4 md:px-6 lg:px-8">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <div className="flex items-center gap-2">
