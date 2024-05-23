@@ -1,6 +1,3 @@
-// Example model schema from the Drizzle docs
-// https://orm.drizzle.team/docs/sql-schema-declaration
-
 import { sql } from "drizzle-orm";
 import {
   index,
@@ -8,27 +5,69 @@ import {
   serial,
   timestamp,
   varchar,
+  integer,
+  text,
+  boolean,
+  foreignKey,
+  uuid
 } from "drizzle-orm/pg-core";
 
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
+// Create a table prefix function
 export const createTable = pgTableCreator((name) => `wolkenlauf_${name}`);
 
-export const posts = createTable(
-  "post",
+// Projects table
+export const projects = createTable(
+  "projects",
   {
-    id: serial("id").primaryKey(),
-    name: varchar("name", { length: 256 }),
+    id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
+    userId: varchar("user_id", { length: 256 }).notNull(), // Foreign key from Clerk
+    name: varchar("name", { length: 256 }).notNull(),
+    description: text("description"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .default(sql`CURRENT_TIMESTAMP`)
       .notNull(),
-    updatedAt: timestamp("updatedAt", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
   },
-  (example) => ({
-    nameIndex: index("name_idx").on(example.name),
+  (project) => ({
+    userIdIndex: index("user_id_idx").on(project.userId),
+    nameIndex: index("name_idx").on(project.name),
+  })
+);
+
+// Files table
+export const files = createTable(
+  "files",
+  {
+    id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
+    projectId: uuid("project_id").references(() => projects.id).notNull(),
+    name: varchar("name", { length: 256 }).notNull(),
+    s3Url: varchar("s3_url", { length: 1024 }).notNull(),
+    relativePath: varchar("relative_path", { length: 1024 }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).default(sql`CURRENT_TIMESTAMP`).notNull(),
+  },
+  (file) => ({
+    projectIdIndex: index("files_project_id_idx").on(file.projectId),
+  })
+);
+
+// Runs table
+export const runs = createTable(
+  "runs",
+  {
+    id: uuid("id").default(sql`gen_random_uuid()`).primaryKey(),
+    projectId: uuid("project_id").references(() => projects.id).notNull(),
+    runAt: timestamp("run_at", { withTimezone: true })
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    logs: text("logs"),
+    success: boolean("success").notNull(),
+    runTime: integer("run_time").notNull(), // in seconds
+  },
+  (run) => ({
+    projectIdIndex: index("runs_project_id_idx").on(run.projectId),
+    runAtIndex: index("run_at_idx").on(run.runAt),
   })
 );

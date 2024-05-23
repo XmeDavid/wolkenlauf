@@ -1,9 +1,16 @@
+'use client';
 import Link from "next/link";
 import { Button } from "~/components/ui/button";
 import { DropdownMenuTrigger, DropdownMenuItem, DropdownMenuContent, DropdownMenu } from "~/components/ui/dropdown-menu";
 import { Input } from "~/components/ui/input";
 import { TableHead, TableRow, TableHeader, TableCell, TableBody, Table } from "~/components/ui/table";
 import { MoveHorizontalIcon } from "~/components/icons";
+
+function newProject(){
+  fetch('/api/new-project',{
+    method: 'POST'
+  })
+}
 
 export default function Dashboard() {
   return (
@@ -20,7 +27,7 @@ export default function Dashboard() {
         <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
           <div className="flex items-center">
             <h1 className="font-semibold text-lg md:text-2xl">Projects</h1>
-            <Button className="ml-auto" size="sm">
+            <Button className="ml-auto" size="sm" onClick={newProject} >
               New Project
             </Button>
           </div>
