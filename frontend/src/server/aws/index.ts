@@ -1,0 +1,1 @@
+export { Client as S3Client } from './s3';
