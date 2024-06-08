@@ -35,7 +35,7 @@ export default function RootLayout({
       )}
       >
         <body className="pt-16">
-          <section className="fixed top-0 w-full h-16 flex items-center justify-between bg-gray-900 px-6 py-4 text-white shadow-lg">
+          <header className="fixed top-0 w-full h-16 flex items-center justify-between bg-gray-900 px-6 py-4 text-white shadow-lg">
             <SignedIn>
               <Link className="flex items-center gap-2" href="/dashboard">
                 <CodeIcon className="h-6 w-6" />
@@ -56,10 +56,9 @@ export default function RootLayout({
                   }
                 }} />
             </SignedIn>
-          </section>
-          <main>
-            {children}
-          </main>
+          </header>
+
+          {children}
         </body>
       </html>
     </ClerkProvider>

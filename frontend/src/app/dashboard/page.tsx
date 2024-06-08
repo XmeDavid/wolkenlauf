@@ -14,8 +14,8 @@ function newProject(){
 
 export default function Dashboard() {
   return (
-    <div className="h-full w-full flex flex-col">
-        <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">
+    <section className="h-full w-full flex flex-col">
+        <div className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">
           <div className="w-full flex-1">
             <Input
               className="w-full bg-white shadow-none appearance-none pl-8 md:w-2/3 lg:w-1/3 dark:bg-gray-950"
@@ -23,8 +23,8 @@ export default function Dashboard() {
               type="search"
             />
           </div>
-        </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+        </div>
+        <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
           <div className="flex items-center">
             <h1 className="font-semibold text-lg md:text-2xl">Projects</h1>
             <Button className="ml-auto" size="sm" onClick={newProject} >
@@ -145,7 +145,7 @@ export default function Dashboard() {
               </TableBody>
             </Table>
           </div>
-        </main>
-      </div>
+        </div>
+      </section>
   );
 }

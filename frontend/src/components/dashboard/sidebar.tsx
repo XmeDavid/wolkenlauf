@@ -2,7 +2,7 @@ import Link from "next/link";
 import { PackageIcon, PlusIcon, SettingsIcon } from "~/components/icons";
 export default function Component() {
   return (
-    <div className="grid min-h-screen lg:grid-cols-[246px_1fr]">
+    <section className="grid min-h-screen lg:grid-cols-[246px_1fr]">
       <div className="hidden border-r bg-gray-100/40 lg:block dark:bg-gray-800/40">
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex-1 overflow-auto py-2">
@@ -32,6 +32,6 @@ export default function Component() {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   )
 }

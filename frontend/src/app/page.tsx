@@ -8,7 +8,7 @@ export default function HomePage() {
   return (
     <>
       <main className="mx-auto my-12 min-h-screen">
-        <div className="container grid grid-cols-1 gap-8 lg:grid-cols-2">
+        <section className="container grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div className="space-y-4">
             <h1 className="text-4xl font-bold tracking-tight">Unleash Your Coding Potential</h1>
             <p className="text-gray-600 dark:text-gray-400">
@@ -37,7 +37,7 @@ export default function HomePage() {
               width="750"
             />
           </div>
-        </div>
+        </section>
         <section className="container mt-12 mb-8 space-y-8">
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-950">
