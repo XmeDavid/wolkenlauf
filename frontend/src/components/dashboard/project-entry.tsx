@@ -11,7 +11,6 @@ export interface ProjectRowProps {
 };
 
 function formatDate(date: string) {
-    console.log('date---',typeof date);
     const stringDate = new Date(date).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",

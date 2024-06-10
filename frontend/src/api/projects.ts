@@ -12,4 +12,10 @@ export function newProject() {
   fetch('/api/new-project', {
     method: 'POST'
   });
+};
+
+export async function getProjectsWithFiles(){
+  const response = await fetch('/api/projects?files=true');
+  const data = await response.json();
+  return data as Project[];
 }

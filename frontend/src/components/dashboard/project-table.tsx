@@ -17,7 +17,7 @@ export default function ProjectTable({ searchQuery }: ProjectTableProps) {
     
     const { data: projects } = useQuery({
         queryKey: ['projects', searchQuery],
-        queryFn: async() => {console.log('got here'); return getProjects({searchQuery})}
+        queryFn: async() => getProjects({searchQuery})
     });
 
     return (
