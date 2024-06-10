@@ -2,7 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
 import { projects } from "~/server/db/schema";
 import { S3Client } from "~/server/aws";
-
+import { createProject } from "~/server//db/queries/projects";
 export async function POST(request:Request) {
     console.log('[INFO][API]: POST /new-project');
     try {
@@ -11,20 +11,18 @@ export async function POST(request:Request) {
             throw new Error('Unauthorized');
         }
 
-        const res = await db.insert(projects).values({
+        const res = await createProject({
             name: "New Project",
             userId: user.userId
-        }).returning();
+        })
 
         const project = res[0];
         if(!project){
             throw new Error('Project not created');
         }
 
-        const s3 = new S3Client();
-
         const projectFolder = `${user.userId}/${project.id}/`;
-        await s3.createFolderRecursively(projectFolder);
+        await new S3Client().createFolderRecursively(projectFolder);
 
         return Response.json(project);
     } catch (error) {
