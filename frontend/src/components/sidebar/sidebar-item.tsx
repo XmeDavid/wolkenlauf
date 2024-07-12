@@ -3,16 +3,10 @@ import SidebarLink from "./sidebar-link";
 import SidebarProject from "./sidebar-project";
 
 export default function SidebarItem(item: SideBarItem) {
-    if (item.project !== undefined) {
-        console.log('item---', item.project);
-        return (
-            <SidebarProject {...item as ISidebarProject} />
-        );
-    }
-    if (item.url && typeof item.url === 'string') {
-        return (
-            <SidebarLink {...item as ISidebarLink} />
-        );
-    }
-    return (<></>);
+    return (
+        <>
+            {item.project ? <SidebarProject {...item as ISidebarProject} /> : <></> }
+            {item.url && typeof item.url === 'string' ? <SidebarLink {...item as ISidebarLink} /> : <></> }
+        </>
+    );
 };
