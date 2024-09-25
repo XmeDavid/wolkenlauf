@@ -6,10 +6,16 @@ import { PackageIcon, SettingsIcon } from "~/components/icons";
 import {
   useQuery,
 } from '@tanstack/react-query'
+import { usePathname } from 'next/navigation'
+
+function extractFiles(){
+
+}
 
 async function  getSideBarItems(): Promise<SideBarItem[]>{
   const projects = await getProjectsWithFiles();
-
+  console.log('Hey there!!!')
+  // console.log(path);
   return [
     ...(projects).map((project) => ({
       label: project.name,
@@ -31,6 +37,11 @@ export default function Component() {
     queryKey: ['allProjects'],
     queryFn: async() => getSideBarItems()
   });
+
+
+  const pathname = usePathname().split('/');
+  pathname.shift();
+  console.log(pathname)
 
 
   return (

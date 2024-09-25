@@ -1,12 +1,11 @@
-import { FileIcon } from "lucide-react";
+
 import Link from "next/link"
 
-import { SettingsIcon } from "~/components/icons"
+import { FileIcon, SettingsIcon } from "~/components/icons"
 import { ISidebarProject, SideBarItem } from "~/types"
 
 
 export default function SidebarProject({ icon, label, project }: ISidebarProject) {
-  console.log('project---', project);
   const subItems: SideBarItem[] = [
     ...project.files.map((file) => ({
       label: file.name,

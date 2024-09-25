@@ -4,7 +4,6 @@ import SidebarProject from "./sidebar-project";
 
 export default function SidebarItem(item: SideBarItem) {
     if (item.project !== undefined) {
-        console.log('item---', item.project);
         return (
             <SidebarProject {...item as ISidebarProject} />
         );
