@@ -12,6 +12,7 @@ export const env = createEnv({
     AWS_SECRET_ACCESS_KEY: z.string(),
     AWS_BUCKET_NAME: z.string(),
     POSTGRES_URL: z.string().url(),
+    VM_PROVISIONER_URL: z.string().url().default("http://localhost:8080"),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -36,6 +37,7 @@ export const env = createEnv({
     AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
     AWS_BUCKET_NAME: process.env.AWS_BUCKET_NAME,
     POSTGRES_URL: process.env.POSTGRES_URL,
+    VM_PROVISIONER_URL: process.env.VM_PROVISIONER_URL,
     NODE_ENV: process.env.NODE_ENV,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },

@@ -1,6 +1,5 @@
 "use client";
 import DashboardHeader from "~/components/dashboard/header";
-import DashboardSidebar from "~/components/sidebar/sidebar";
 import {
   QueryClient,
   QueryClientProvider,
@@ -14,8 +13,7 @@ export default function DashboardLayout({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <main className="w-screen h-screen flex">
-          <DashboardSidebar></DashboardSidebar>
+      <main className="w-screen h-screen">
           {children}
       </main>
     </QueryClientProvider>
