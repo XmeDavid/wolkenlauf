@@ -142,15 +142,22 @@ async function monitorVmStatus(dbInstanceId: string, cloudInstanceId: string, pr
   const maxAttempts = 60; // Monitor for up to 10 minutes
   let attempts = 0;
 
+  console.log(`🔍 Starting monitoring for ${provider} VM ${cloudInstanceId} (DB ID: ${dbInstanceId})`);
+
   const checkStatus = async () => {
+    attempts++;
     try {
-      const statusResponse = await fetch(`${env.VM_PROVISIONER_URL}/vm/${cloudInstanceId}/status?provider=${provider}`);
+      const statusUrl = `${env.VM_PROVISIONER_URL}/vm/${cloudInstanceId}/status?provider=${provider}`;
+      console.log(`📡 [Attempt ${attempts}/${maxAttempts}] Checking status: ${statusUrl}`);
+      
+      const statusResponse = await fetch(statusUrl);
       
       if (statusResponse.ok) {
         const status = await statusResponse.json();
+        console.log(`📊 Go backend response:`, status);
         
         // Update our database with the latest status
-        await db
+        const updateResult = await db
           .update(instances)
           .set({
             status: status.status,
@@ -158,20 +165,36 @@ async function monitorVmStatus(dbInstanceId: string, cloudInstanceId: string, pr
             launchedAt: status.status === "running" ? new Date() : undefined,
             updatedAt: new Date(),
           })
-          .where(eq(instances.id, dbInstanceId));
+          .where(eq(instances.id, dbInstanceId))
+          .returning();
 
-        console.log(`VM ${cloudInstanceId} status: ${status.status}, IP: ${status.publicIp}`);
+        console.log(`📝 Updated DB for VM ${cloudInstanceId}: status=${status.status}, IP=${status.publicIp}`);
+        console.log(`📝 DB update result:`, updateResult);
 
-        // Continue monitoring if still pending
-        if (status.status === "pending" && attempts < maxAttempts) {
-          attempts++;
+        // Continue monitoring if still pending/starting/initializing and within limits
+        if ((status.status === "pending" || status.status === "starting" || status.status === "initializing") && attempts < maxAttempts) {
+          console.log(`⏳ VM still ${status.status}, continuing monitoring in 10 seconds...`);
           setTimeout(checkStatus, 10000); // Check every 10 seconds
+        } else if (status.status === "running") {
+          console.log(`✅ VM ${cloudInstanceId} is now running! Monitoring complete.`);
+        } else if (attempts >= maxAttempts) {
+          console.log(`⚠️  Max monitoring attempts reached for VM ${cloudInstanceId}, final status: ${status.status}`);
+        } else {
+          console.log(`ℹ️  VM ${cloudInstanceId} reached final status: ${status.status}, monitoring complete.`);
+        }
+      } else {
+        const errorText = await statusResponse.text();
+        console.error(`❌ Status check failed: ${statusResponse.status} - ${errorText}`);
+        
+        if (attempts < maxAttempts) {
+          console.log(`🔄 Retrying status check in 10 seconds...`);
+          setTimeout(checkStatus, 10000);
         }
       }
     } catch (error) {
-      console.error("Error monitoring VM status:", error);
+      console.error(`❌ Error monitoring VM status (attempt ${attempts}):`, error);
       if (attempts < maxAttempts) {
-        attempts++;
+        console.log(`🔄 Retrying status check in 10 seconds...`);
         setTimeout(checkStatus, 10000);
       }
     }

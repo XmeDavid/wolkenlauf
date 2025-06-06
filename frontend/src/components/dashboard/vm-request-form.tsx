@@ -12,9 +12,9 @@ const PRESETS = [
     name: "📦 Budget Dev",
     description: "Basic CPU for development",
     provider: "hetzner",
-    instanceType: "cx11",
+    instanceType: "cpx11",
     hourlyRate: 0.005,
-    specs: "1 vCPU, 2GB RAM"
+    specs: "2 vCPU, 2GB RAM"
   },
   {
     id: "aws-cpu-test",
@@ -65,13 +65,15 @@ const PRESETS = [
   }
 ];
 
-// Hetzner instance types
+// Hetzner instance types (updated with real available types)
 const HETZNER_INSTANCES = [
-  { value: "cx11", label: "cx11 - 1 vCPU, 2GB RAM", hourlyRate: 0.005, provider: "hetzner" },
-  { value: "cx21", label: "cx21 - 2 vCPU, 4GB RAM", hourlyRate: 0.011, provider: "hetzner" },
-  { value: "cx31", label: "cx31 - 2 vCPU, 8GB RAM", hourlyRate: 0.021, provider: "hetzner" },
-  { value: "cx41", label: "cx41 - 4 vCPU, 16GB RAM", hourlyRate: 0.041, provider: "hetzner" },
-  { value: "cx51", label: "cx51 - 8 vCPU, 32GB RAM", hourlyRate: 0.081, provider: "hetzner" },
+  { value: "cpx11", label: "cpx11 - 2 vCPU, 2GB RAM", hourlyRate: 0.005, provider: "hetzner" },
+  { value: "cpx21", label: "cpx21 - 3 vCPU, 4GB RAM", hourlyRate: 0.008, provider: "hetzner" },
+  { value: "cpx31", label: "cpx31 - 4 vCPU, 8GB RAM", hourlyRate: 0.015, provider: "hetzner" },
+  { value: "cx22", label: "cx22 - 2 vCPU, 4GB RAM", hourlyRate: 0.006, provider: "hetzner" },
+  { value: "cx32", label: "cx32 - 4 vCPU, 8GB RAM", hourlyRate: 0.012, provider: "hetzner" },
+  { value: "cx42", label: "cx42 - 8 vCPU, 16GB RAM", hourlyRate: 0.024, provider: "hetzner" },
+  { value: "cx52", label: "cx52 - 16 vCPU, 32GB RAM", hourlyRate: 0.048, provider: "hetzner" },
 ];
 
 // AWS CPU instances  
