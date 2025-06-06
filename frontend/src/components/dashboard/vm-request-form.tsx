@@ -23,7 +23,6 @@ const PRESETS = [
     provider: "aws", 
     instanceType: "t3.medium",
     hourlyRate: 0.0416,
-    spotPrice: false,
     specs: "2 vCPU, 4GB RAM (CPU only)"
   },
   {
@@ -33,7 +32,6 @@ const PRESETS = [
     provider: "aws",
     instanceType: "g4dn.xlarge",
     hourlyRate: 0.526,
-    spotPrice: false,
     specs: "4 vCPU, 16GB RAM, T4 GPU"
   },
   {
@@ -175,7 +173,7 @@ export default function VmRequestForm({ onSubmit, isLoading = false }: VmRequest
     if (!selectedInstance) return "0";
     
     let rate = selectedInstance.hourlyRate;
-    if (formData.useSpotInstance && 'spotPrice' in selectedInstance && selectedInstance.spotPrice) {
+    if (formData.useSpotInstance && 'spotPrice' in selectedInstance && typeof selectedInstance.spotPrice === 'number' && selectedInstance.spotPrice > 0) {
       rate = selectedInstance.spotPrice;
     }
     
@@ -293,7 +291,7 @@ export default function VmRequestForm({ onSubmit, isLoading = false }: VmRequest
                   {getAvailableInstances().map(instance => (
                     <option key={instance.value} value={instance.value}>
                       {instance.label} - ${instance.hourlyRate}/hr
-                      {'spotPrice' in instance && instance.spotPrice && ` (Spot: $${instance.spotPrice}/hr)`}
+                      {'spotPrice' in instance && typeof instance.spotPrice === 'number' && instance.spotPrice > 0 && ` (Spot: $${instance.spotPrice}/hr)`}
                     </option>
                   ))}
                 </select>

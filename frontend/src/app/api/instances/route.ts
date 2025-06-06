@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
 import { instances } from "~/server/db/schema";
@@ -37,7 +37,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await request.json();
+    const body = await request.json() as {
+      name: string;
+      provider: string;
+      instanceType: string;
+      region: string;
+      autoTerminateMinutes?: number;
+      useSpotInstance?: boolean;
+      image?: string;
+    };
     const { name, provider, instanceType, region, autoTerminateMinutes, useSpotInstance, image } = body;
 
     // Validate required fields
@@ -54,9 +62,9 @@ export async function POST(request: NextRequest) {
       provider,
       instanceType,
       region,
-      useSpotInstance: useSpotInstance || false,
-      image: image || "", // Let Go backend choose correct AMI
-      autoTerminateMinutes: parseInt(autoTerminateMinutes?.toString() || "60", 10),
+      useSpotInstance: useSpotInstance ?? false,
+      image: image ?? "", // Let Go backend choose correct AMI
+      autoTerminateMinutes: parseInt(autoTerminateMinutes?.toString() ?? "60", 10),
       userId,
     };
 
@@ -85,7 +93,18 @@ export async function POST(request: NextRequest) {
         throw new Error(`Go backend error: ${goBackendResponse.status} - ${errorText}`);
       }
 
-      const vmResponse = await goBackendResponse.json();
+      const vmResponse = await goBackendResponse.json() as {
+        id: string;
+        name: string;
+        provider: string;
+        instanceType: string;
+        region: string;
+        status: string;
+        publicIp: string;
+        sshUsername: string;
+        sshPassword: string;
+        image?: string;
+      };
       console.log("Go backend response:", vmResponse);
 
       // Store the VM info in our database
@@ -102,21 +121,23 @@ export async function POST(request: NextRequest) {
           publicIp: vmResponse.publicIp,
           sshUsername: vmResponse.sshUsername,
           sshPassword: vmResponse.sshPassword,
-          useSpotInstance: useSpotInstance || false,
-          image: vmResponse.image || vmRequest.image,
-          autoTerminateMinutes: parseInt(autoTerminateMinutes?.toString() || "60", 10),
+          useSpotInstance: useSpotInstance ?? false,
+          image: vmResponse.image ?? vmRequest.image,
+          autoTerminateMinutes: parseInt(autoTerminateMinutes?.toString() ?? "60", 10),
           createdAt: new Date(),
           updatedAt: new Date(),
         })
         .returning();
 
       // Start monitoring the VM status
-      setTimeout(async () => {
-        try {
-          await monitorVmStatus(newInstance[0]!.id, vmResponse.id, provider);
-        } catch (error) {
-          console.error("Failed to start VM monitoring:", error);
-        }
+      setTimeout(() => {
+        void (async () => {
+          try {
+            await monitorVmStatus(newInstance[0]!.id, vmResponse.id, provider);
+          } catch (error) {
+            console.error("Failed to start VM monitoring:", error);
+          }
+        })();
       }, 5000);
 
       return NextResponse.json(newInstance[0], { status: 201 });
@@ -153,7 +174,10 @@ async function monitorVmStatus(dbInstanceId: string, cloudInstanceId: string, pr
       const statusResponse = await fetch(statusUrl);
       
       if (statusResponse.ok) {
-        const status = await statusResponse.json();
+        const status = await statusResponse.json() as {
+          status: string;
+          publicIp?: string;
+        };
         console.log(`📊 Go backend response:`, status);
         
         // Update our database with the latest status
@@ -161,7 +185,7 @@ async function monitorVmStatus(dbInstanceId: string, cloudInstanceId: string, pr
           .update(instances)
           .set({
             status: status.status,
-            publicIp: status.publicIp || undefined,
+            publicIp: status.publicIp ?? undefined,
             launchedAt: status.status === "running" ? new Date() : undefined,
             updatedAt: new Date(),
           })
@@ -174,7 +198,7 @@ async function monitorVmStatus(dbInstanceId: string, cloudInstanceId: string, pr
         // Continue monitoring if still pending/starting/initializing and within limits
         if ((status.status === "pending" || status.status === "starting" || status.status === "initializing") && attempts < maxAttempts) {
           console.log(`⏳ VM still ${status.status}, continuing monitoring in 10 seconds...`);
-          setTimeout(checkStatus, 10000); // Check every 10 seconds
+          setTimeout(() => void checkStatus(), 10000); // Check every 10 seconds
         } else if (status.status === "running") {
           console.log(`✅ VM ${cloudInstanceId} is now running! Monitoring complete.`);
         } else if (attempts >= maxAttempts) {
@@ -188,26 +212,17 @@ async function monitorVmStatus(dbInstanceId: string, cloudInstanceId: string, pr
         
         if (attempts < maxAttempts) {
           console.log(`🔄 Retrying status check in 10 seconds...`);
-          setTimeout(checkStatus, 10000);
+          setTimeout(() => void checkStatus(), 10000);
         }
       }
     } catch (error) {
       console.error(`❌ Error monitoring VM status (attempt ${attempts}):`, error);
       if (attempts < maxAttempts) {
         console.log(`🔄 Retrying status check in 10 seconds...`);
-        setTimeout(checkStatus, 10000);
+        setTimeout(() => void checkStatus(), 10000);
       }
     }
   };
 
-  checkStatus();
-}
-
-function generateRandomPassword(): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let password = "";
-  for (let i = 0; i < 12; i++) {
-    password += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return password;
+  void checkStatus();
 }

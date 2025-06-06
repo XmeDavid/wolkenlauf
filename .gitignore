@@ -1,0 +1,8 @@
+.env
+*/.env
+
+.log
+*/*.log
+
+*/.tmux
+.tmux
