@@ -3,6 +3,7 @@ package providers
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -19,22 +20,28 @@ type HetznerProvider struct {
 }
 
 var hetznerInstanceTypes = map[string]bool{
-	"cx11":  true, // 1 vCPU, 2 GB RAM
-	"cx21":  true, // 2 vCPU, 4 GB RAM
-	"cx31":  true, // 2 vCPU, 8 GB RAM
-	"cx41":  true, // 4 vCPU, 16 GB RAM
-	"cx51":  true, // 8 vCPU, 32 GB RAM
 	"cpx11": true, // 2 vCPU, 2 GB RAM (AMD)
 	"cpx21": true, // 3 vCPU, 4 GB RAM (AMD)
 	"cpx31": true, // 4 vCPU, 8 GB RAM (AMD)
 	"cpx41": true, // 8 vCPU, 16 GB RAM (AMD)
 	"cpx51": true, // 16 vCPU, 32 GB RAM (AMD)
+	"cax11": true, // 2 vCPU, 4 GB RAM (ARM)
+	"cax21": true, // 4 vCPU, 8 GB RAM (ARM)
+	"cax31": true, // 8 vCPU, 16 GB RAM (ARM)
+	"cax41": true, // 16 vCPU, 32 GB RAM (ARM)
+	"cx22":  true, // 2 vCPU, 4 GB RAM (Intel)
+	"cx32":  true, // 4 vCPU, 8 GB RAM (Intel)
+	"cx42":  true, // 8 vCPU, 16 GB RAM (Intel)
+	"cx52":  true, // 16 vCPU, 32 GB RAM (Intel)
 }
 
 func NewHetznerProvider(cfg config.HetznerConfig) (*HetznerProvider, error) {
 	if cfg.Token == "" {
 		return nil, fmt.Errorf("Hetzner token is required")
 	}
+
+	fmt.Printf("🔑 Initializing Hetzner provider with token: %s...%s\n", 
+		cfg.Token[:8], cfg.Token[len(cfg.Token)-8:])
 
 	client := hcloud.NewClient(hcloud.WithToken(cfg.Token))
 
@@ -51,13 +58,30 @@ func (p *HetznerProvider) SupportsInstanceType(instanceType string) bool {
 func (p *HetznerProvider) CreateVM(req *models.VMRequest) (*models.VMResponse, error) {
 	ctx := context.Background()
 
+	// Test API connection first
+	fmt.Printf("🔍 Testing Hetzner API connection...\n")
+	serverTypes, _, err := p.client.ServerType.List(ctx, hcloud.ServerTypeListOpts{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to Hetzner API: %w", err)
+	}
+	fmt.Printf("✅ Successfully connected to Hetzner API, found %d server types\n", len(serverTypes))
+
 	// Generate SSH credentials
 	sshPassword := utils.GenerateRandomPassword(16)
 
 	// Get server type
+	fmt.Printf("🔍 Looking for server type: %s\n", req.InstanceType)
+	
+	// First, let's see all available server types
+	fmt.Printf("🔍 Available Hetzner server types:\n")
+	for _, st := range serverTypes {
+		fmt.Printf("  - %s: %d CPU, %.1fGB RAM\n", 
+			st.Name, st.Cores, st.Memory)
+	}
+	
 	serverType, _, err := p.client.ServerType.GetByName(ctx, req.InstanceType)
 	if err != nil {
-		return nil, fmt.Errorf("invalid instance type %s: %w", req.InstanceType, err)
+		return nil, fmt.Errorf("invalid instance type '%s' - see available types above: %w", req.InstanceType, err)
 	}
 
 	// Get datacenter/location
@@ -136,17 +160,19 @@ EOF
 echo "✅ Hetzner VM setup complete!"
 `, sshPassword, req.InstanceType, sshPassword)
 
+	// Sanitize server name for Hetzner (alphanumeric + hyphens only, max 63 chars)
+	sanitizedName := sanitizeHetznerName(req.Name)
+
 	// Create server
 	createOpts := hcloud.ServerCreateOpts{
-		Name:       req.Name,
+		Name:       sanitizedName,
 		ServerType: serverType,
 		Image:      image,
 		Datacenter: datacenter,
 		UserData:   cloudInitScript,
 		Labels: map[string]string{
-			"provider":   "wolkenlauf",
-			"user-id":    req.UserID,
-			"created-at": time.Now().Format(time.RFC3339),
+			"provider": "wolkenlauf",
+			"managed":  "true",
 		},
 	}
 
@@ -204,7 +230,12 @@ func (p *HetznerProvider) GetVMStatus(id string) (*models.VMStatus, error) {
 
 	// Convert string ID to int64
 	var serverID int64
-	fmt.Sscanf(id, "%d", &serverID)
+	n, err := fmt.Sscanf(id, "%d", &serverID)
+	if err != nil || n != 1 {
+		return nil, fmt.Errorf("invalid server ID format '%s': %w", id, err)
+	}
+
+	fmt.Printf("🔍 Checking Hetzner server status for ID: %s (parsed as %d)\n", id, serverID)
 
 	server, _, err := p.client.Server.GetByID(ctx, serverID)
 	if err != nil {
@@ -215,17 +246,31 @@ func (p *HetznerProvider) GetVMStatus(id string) (*models.VMStatus, error) {
 		return nil, fmt.Errorf("server not found")
 	}
 
+	// Log the raw status from Hetzner API
+	rawStatus := string(server.Status)
+	fmt.Printf("📊 Raw Hetzner server status: '%s'\n", rawStatus)
+
 	// Convert Hetzner status to our standard status
-	status := strings.ToLower(string(server.Status))
+	status := strings.ToLower(rawStatus)
+	originalStatus := status
+	
 	switch status {
 	case "initializing":
 		status = "pending"
+	case "starting":
+		status = "pending"
 	case "running":
 		status = "running"
+	case "stopping":
+		status = "stopping"
 	case "off":
 		status = "stopped"
 	case "deleting":
 		status = "terminated"
+	default:
+		// Log unknown status for debugging
+		fmt.Printf("⚠️  Unknown Hetzner status '%s', defaulting to 'pending'\n", originalStatus)
+		status = "pending"
 	}
 
 	publicIP := ""
@@ -233,10 +278,43 @@ func (p *HetznerProvider) GetVMStatus(id string) (*models.VMStatus, error) {
 		publicIP = server.PublicNet.IPv4.IP.String()
 	}
 
+	fmt.Printf("📡 Hetzner VM %s: Status %s -> %s, IP: %s\n", id, originalStatus, status, publicIP)
+
 	return &models.VMStatus{
 		ID:        id,
 		Status:    status,
 		PublicIP:  publicIP,
 		UpdatedAt: time.Now(),
 	}, nil
+}
+
+// sanitizeHetznerName cleans the name to meet Hetzner requirements
+// Rules: alphanumeric + hyphens only, max 63 chars, no leading/trailing hyphens
+func sanitizeHetznerName(name string) string {
+	// Convert to lowercase
+	name = strings.ToLower(name)
+	
+	// Replace invalid characters with hyphens
+	reg := regexp.MustCompile(`[^a-z0-9-]`)
+	name = reg.ReplaceAllString(name, "-")
+	
+	// Remove multiple consecutive hyphens
+	reg = regexp.MustCompile(`-+`)
+	name = reg.ReplaceAllString(name, "-")
+	
+	// Remove leading and trailing hyphens
+	name = strings.Trim(name, "-")
+	
+	// Ensure max length of 63 characters
+	if len(name) > 63 {
+		name = name[:63]
+		name = strings.TrimRight(name, "-")
+	}
+	
+	// Ensure name is not empty
+	if name == "" {
+		name = "wolkenlauf-vm"
+	}
+	
+	return name
 }
