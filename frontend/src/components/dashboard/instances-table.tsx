@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { TableHead, TableRow, TableHeader, TableBody, Table } from "~/components/ui/table";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
@@ -44,30 +44,88 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function InstanceRow({ instance }: { instance: Instance }) {
+  const queryClient = useQueryClient();
+
+  const terminateMutation = useMutation({
+    mutationFn: async (instanceId: string) => {
+      const response = await fetch(`/api/instances/${instanceId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to terminate instance');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['instances'] });
+    },
+    onError: (error) => {
+      console.error('Failed to terminate instance:', error);
+      alert('Failed to terminate instance. Please try again.');
+    },
+  });
+
+  const removeMutation = useMutation({
+    mutationFn: async (instanceId: string) => {
+      const response = await fetch(`/api/instances/${instanceId}?action=remove`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to remove instance');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['instances'] });
+    },
+    onError: (error) => {
+      console.error('Failed to remove instance:', error);
+      alert('Failed to remove instance. Please try again.');
+    },
+  });
+
+  const syncMutation = useMutation({
+    mutationFn: async (instanceId: string) => {
+      const response = await fetch(`/api/instances/${instanceId}/sync`, {
+        method: 'POST',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to sync status');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      void queryClient.invalidateQueries({ queryKey: ['instances'] });
+      alert(`Status synced: ${data.oldStatus} → ${data.newStatus}`);
+    },
+    onError: (error) => {
+      console.error('Failed to sync status:', error);
+      alert('Failed to sync status. Please try again.');
+    },
+  });
+
   const handleConnect = () => {
     if (instance.publicIp && instance.sshUsername && instance.sshPassword) {
       const sshCommand = `ssh ${instance.sshUsername}@${instance.publicIp}`;
-      navigator.clipboard.writeText(sshCommand);
+      void navigator.clipboard.writeText(sshCommand);
       alert(`SSH command copied to clipboard!\n\nCommand: ${sshCommand}\nPassword: ${instance.sshPassword}`);
     }
   };
 
-  const handleTerminate = async () => {
+  const handleTerminate = () => {
     if (confirm(`Are you sure you want to terminate "${instance.name}"? This cannot be undone.`)) {
-      try {
-        const response = await fetch(`/api/instances/${instance.id}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) {
-          throw new Error('Failed to terminate instance');
-        }
-        // TODO: Refresh the instances list
-        window.location.reload();
-      } catch (error) {
-        console.error('Failed to terminate instance:', error);
-        alert('Failed to terminate instance. Please try again.');
-      }
+      terminateMutation.mutate(instance.id);
     }
+  };
+
+  const handleRemove = () => {
+    if (confirm(`Remove "${instance.name}" from your list? This will only remove it from the UI - the VM is already terminated.`)) {
+      removeMutation.mutate(instance.id);
+    }
+  };
+
+  const handleSync = () => {
+    syncMutation.mutate(instance.id);
   };
 
   return (
@@ -105,9 +163,32 @@ function InstanceRow({ instance }: { instance: Instance }) {
               size="sm"
               variant="destructive"
               onClick={handleTerminate}
+              disabled={terminateMutation.isPending}
             >
-              Terminate
+              {terminateMutation.isPending ? 'Terminating...' : 'Terminate'}
             </Button>
+          )}
+          {instance.status === 'terminated' && (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleSync}
+                disabled={syncMutation.isPending}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                {syncMutation.isPending ? 'Syncing...' : 'Sync Status'}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleRemove}
+                disabled={removeMutation.isPending}
+                className="text-gray-600 hover:text-red-600"
+              >
+                {removeMutation.isPending ? 'Removing...' : 'Remove'}
+              </Button>
+            </>
           )}
         </div>
       </td>

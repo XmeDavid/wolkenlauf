@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
 import { instances } from "~/server/db/schema";
@@ -17,6 +17,8 @@ export async function DELETE(
     }
 
     const instanceId = params.id;
+    const url = new URL(request.url);
+    const action = url.searchParams.get('action');
 
     // Verify the instance belongs to the user
     const instance = await db
@@ -31,41 +33,71 @@ export async function DELETE(
 
     const instanceData = instance[0];
 
-    // Call Go backend to terminate the VM
-    try {
-      const deleteResponse = await fetch(`${env.VM_PROVISIONER_URL}/vm/${instanceData.instanceId}?provider=${instanceData.provider}`, {
-        method: 'DELETE',
-      });
-
-      if (!deleteResponse.ok) {
-        const errorText = await deleteResponse.text();
-        console.error("Go backend delete error:", errorText);
-        // Continue with database update even if cloud termination fails
+    if (action === 'remove') {
+      // Remove from database only (for terminated instances)
+      if (instanceData.status !== 'terminated') {
+        return NextResponse.json(
+          { error: "Can only remove terminated instances" }, 
+          { status: 400 }
+        );
       }
 
-      console.log(`VM ${instanceData.instanceId} deletion request sent to ${instanceData.provider}`);
-    } catch (error) {
-      console.error("Failed to call Go backend for deletion:", error);
-      // Continue with database update even if cloud termination fails
+      await db
+        .delete(instances)
+        .where(eq(instances.id, instanceId));
+
+      console.log(`Instance ${instanceId} removed from database`);
+      return NextResponse.json({ message: "Instance removed successfully" });
+    } else {
+      // Terminate the VM (default action)
+      if (instanceData.status === 'terminated') {
+        return NextResponse.json(
+          { error: "Instance is already terminated" }, 
+          { status: 400 }
+        );
+      }
+
+      // Call Go backend to terminate the VM
+      try {
+        const deleteResponse = await fetch(`${env.VM_PROVISIONER_URL}/vm/${instanceData.instanceId}?provider=${instanceData.provider}`, {
+          method: 'DELETE',
+        });
+
+        if (!deleteResponse.ok) {
+          const errorText = await deleteResponse.text();
+          console.error("Go backend delete error:", errorText);
+          return NextResponse.json(
+            { error: `Failed to terminate VM: ${errorText}` },
+            { status: 500 }
+          );
+        }
+
+        console.log(`VM ${instanceData.instanceId} deletion request sent to ${instanceData.provider}`);
+      } catch (error) {
+        console.error("Failed to call Go backend for deletion:", error);
+        return NextResponse.json(
+          { error: "Failed to connect to VM provisioner service" },
+          { status: 500 }
+        );
+      }
+
+      // Only update database if cloud termination succeeded
+      await db
+        .update(instances)
+        .set({
+          status: "terminated",
+          terminatedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(instances.id, instanceId));
+
+      console.log(`Instance ${instanceId} successfully terminated and marked in database`);
+      return NextResponse.json({ message: "Instance terminated successfully" });
     }
-
-    // Update instance to terminated status in our database
-    await db
-      .update(instances)
-      .set({
-        status: "terminated",
-        terminatedAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .where(eq(instances.id, instanceId));
-
-    console.log(`Instance ${instanceId} marked as terminated in database`);
-
-    return NextResponse.json({ message: "Instance terminated successfully" });
   } catch (error) {
-    console.error("Failed to terminate instance:", error);
+    console.error("Failed to process instance deletion:", error);
     return NextResponse.json(
-      { error: "Failed to terminate instance" },
+      { error: "Failed to process request" },
       { status: 500 }
     );
   }
