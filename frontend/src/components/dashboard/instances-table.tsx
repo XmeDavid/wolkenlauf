@@ -1,9 +1,11 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { TableHead, TableRow, TableHeader, TableBody, Table } from "~/components/ui/table";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
+import { useState, useEffect } from "react";
 
 interface Instance {
   id: string;
@@ -40,6 +42,81 @@ function StatusBadge({ status }: { status: string }) {
     <Badge variant={variants[status] || "outline"}>
       {status}
     </Badge>
+  );
+}
+
+// Component to display running cost for an instance
+function RunningCostDisplay({ instance }: { instance: Instance }) {
+  const [runningCost, setRunningCost] = useState<number>(0);
+  const [startTime] = useState<Date>(new Date(instance.createdAt));
+  
+  // Calculate hourly rate based on instance type and provider
+  const getHourlyRate = () => {
+    const hetznerRates: Record<string, number> = {
+      "cpx11": 0.005, "cpx21": 0.008, "cpx31": 0.015,
+      "cx22": 0.006, "cx32": 0.012, "cx42": 0.024, "cx52": 0.048,
+    };
+    
+    const awsRates: Record<string, { onDemand: number; spot?: number }> = {
+      "t3.micro": { onDemand: 0.0104 },
+      "t3.small": { onDemand: 0.0208 },
+      "t3.medium": { onDemand: 0.0416 },
+      "t3.large": { onDemand: 0.0832 },
+      "t3.xlarge": { onDemand: 0.1664 },
+      "g4dn.xlarge": { onDemand: 0.526, spot: 0.15 },
+      "g4dn.2xlarge": { onDemand: 0.752, spot: 0.22 },
+      "p3.2xlarge": { onDemand: 3.06, spot: 1.0 },
+      "p3.8xlarge": { onDemand: 12.24, spot: 4.0 },
+      "p4d.24xlarge": { onDemand: 32.77, spot: 10.0 },
+    };
+    
+    if (instance.provider === "hetzner") {
+      return hetznerRates[instance.instanceType] || 0;
+    }
+    
+    if (instance.provider === "aws") {
+      const rates = awsRates[instance.instanceType];
+      if (!rates) return 0;
+      return instance.useSpotInstance && rates.spot ? rates.spot : rates.onDemand;
+    }
+    
+    return 0;
+  };
+  
+  useEffect(() => {
+    if (instance.status !== "running") {
+      return;
+    }
+    
+    const updateCost = () => {
+      const now = new Date();
+      const runtimeHours = (now.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+      const hourlyRateUsd = getHourlyRate();
+      const creditsPerHour = (hourlyRateUsd * 100) * 1.5; // Convert $ to cents, then 50% markup
+      const totalCost = runtimeHours * creditsPerHour;
+      setRunningCost(totalCost);
+    };
+    
+    // Update cost immediately and then every 30 seconds
+    updateCost();
+    const interval = setInterval(updateCost, 30000);
+    
+    return () => clearInterval(interval);
+  }, [instance.status, startTime]);
+  
+  if (instance.status !== "running") {
+    return <span className="text-gray-500 text-sm">-</span>;
+  }
+  
+  return (
+    <div className="text-sm">
+      <div className="font-mono text-orange-600">
+        {Math.ceil(runningCost)} credits
+      </div>
+      <div className="text-xs text-gray-500">
+        {((getHourlyRate() * 100) * 1.5).toFixed(1)} credits/hr
+      </div>
+    </div>
   );
 }
 
@@ -147,6 +224,9 @@ function InstanceRow({ instance }: { instance: Instance }) {
       <td className="px-4 py-2 hidden md:table-cell">
         {instance.publicIp || '-'}
       </td>
+      <td className="px-4 py-2 hidden lg:table-cell">
+        <RunningCostDisplay instance={instance} />
+      </td>
       <td className="px-4 py-2">
         <div className="flex gap-2">
           {instance.status === 'running' && instance.publicIp && (
@@ -201,6 +281,7 @@ interface InstancesTableProps {
 }
 
 export default function InstancesTable({ onRefresh }: InstancesTableProps) {
+  const router = useRouter();
   const { data: instances, isLoading, error, refetch } = useQuery({
     queryKey: ['instances'],
     queryFn: fetchInstances,
@@ -210,18 +291,51 @@ export default function InstancesTable({ onRefresh }: InstancesTableProps) {
   if (isLoading) {
     return (
       <div className="p-8 text-center">
-        <p>Loading instances...</p>
+        <div className="space-y-4">
+          <div className="animate-spin w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto"></div>
+          <p className="text-gray-600">Loading your virtual machines...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-8 text-center text-red-600">
-        <p>Failed to load instances. Please try again.</p>
-        <Button onClick={() => refetch()} className="mt-2">
-          Retry
-        </Button>
+      <div className="p-8">
+        <div className="max-w-md mx-auto text-center">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <div className="text-red-600 mb-2">
+              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.232 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-red-800 mb-2">
+              Failed to load VMs
+            </h3>
+            <p className="text-red-600 text-sm mb-4">
+              {error instanceof Error ? error.message : "Something went wrong while loading your virtual machines."}
+            </p>
+            <div className="space-y-2">
+              <Button onClick={() => void refetch()} className="w-full">
+                Try Again
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.reload()}
+                className="w-full"
+              >
+                Refresh Page
+              </Button>
+              <Button 
+                variant="ghost" 
+                onClick={() => router.push('/dashboard')}
+                className="w-full"
+              >
+                Back to Dashboard
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -244,6 +358,7 @@ export default function InstancesTable({ onRefresh }: InstancesTableProps) {
           <TableHead className="hidden md:table-cell">Type</TableHead>
           <TableHead className="hidden md:table-cell">Region</TableHead>
           <TableHead className="hidden md:table-cell">Public IP</TableHead>
+          <TableHead className="hidden lg:table-cell">Runtime Cost</TableHead>
           <TableHead>Actions</TableHead>
         </TableRow>
       </TableHeader>

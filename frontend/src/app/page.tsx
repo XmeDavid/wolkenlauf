@@ -69,107 +69,315 @@ export default function HomePage() {
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Pricing</h2>
               <p className="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
-                Pay only for the AI inference time you use. Choose the hardware tier that fits your needs.
+                Simple credit-based pricing. Start free and scale as you grow. Credits never expire.
               </p>
             </div>
           </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-12 sm:grid-cols-2 lg:grid-cols-3 lg:gap-12">
-            <Card className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold">CPU</h3>
-                <p className="text-gray-500 dark:text-gray-400">Cost-effective CPU-based inference.</p>
-              </div>
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <p className="text-4xl font-bold">$0.0001</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">per second</p>
+          <div className="mx-auto max-w-6xl py-12">
+            {/* Main 3 cards */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8 mb-8">
+              {/* Free Plan */}
+              <Card className="relative overflow-hidden rounded-xl border-2 border-gray-200 bg-white p-8 shadow-lg transition-all hover:shadow-xl dark:border-gray-700 dark:bg-gray-900">
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Free</h3>
+                  <div className="mt-4 flex items-baseline justify-center">
+                    <span className="text-5xl font-extrabold text-gray-900 dark:text-white">$0</span>
+                    <span className="ml-1 text-xl font-medium text-gray-500">/month</span>
+                  </div>
+                  <p className="mt-2 text-sm text-gray-500">150 credits monthly</p>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
-                  <li>
-                    <CheckIcon className="mr-2 inline-block h-4 w-4 text-gray-900 dark:text-gray-50" />
-                    Up to 2 CPU cores
+                <ul className="mt-8 space-y-3 text-sm">
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    150 credits per month
                   </li>
-                  <li>
-                    <CheckIcon className="mr-2 inline-block h-4 w-4 text-gray-900 dark:text-gray-50" />
-                    Up to 4 GB RAM
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    100 credit welcome bonus
                   </li>
-                  <li>
-                    <CheckIcon className="mr-2 inline-block h-4 w-4 text-gray-900 dark:text-gray-50" />
-                    No GPU access
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    Access to all VM types
+                  </li>
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    SSH access included
                   </li>
                 </ul>
-                <Link
-                  className="inline-flex h-10 w-full items-center justify-center rounded-md bg-gray-900 px-4 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
-                  href="/dashboard"
-                >
-                  Get Started
-                </Link>
-              </div>
-            </Card>
-            <Card className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold">GPU</h3>
-                <p className="text-gray-500 dark:text-gray-400">GPU-accelerated inference for faster results.</p>
-              </div>
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <p className="text-4xl font-bold">$0.0005</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">per second</p>
+                <div className="mt-8">
+                  <Link
+                    href="/dashboard"
+                    className="block w-full rounded-lg bg-gray-900 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-gray-800 transition-colors"
+                  >
+                    Get Started
+                  </Link>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
-                  <li>
-                    <CheckIcon className="mr-2 inline-block h-4 w-4 text-gray-900 dark:text-gray-50" />
-                    Up to 4 CPU cores
+              </Card>
+
+              {/* Pro Plan */}
+              <Card className="relative overflow-hidden rounded-xl border-2 border-purple-200 bg-white p-8 shadow-lg transition-all hover:shadow-xl dark:border-purple-600 dark:bg-gray-900">
+                <div className="absolute -top-1 -right-1 bg-purple-500 text-white px-3 py-1 text-xs font-medium rounded-bl-lg">
+                  Popular
+                </div>
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Pro</h3>
+                  <div className="mt-4 flex items-baseline justify-center">
+                    <span className="text-5xl font-extrabold text-gray-900 dark:text-white">$10</span>
+                    <span className="ml-1 text-xl font-medium text-gray-500">/month</span>
+                  </div>
+                  <p className="mt-2 text-sm text-gray-500">1,200 credits monthly</p>
+                </div>
+                <ul className="mt-8 space-y-3 text-sm">
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    1,200 credits per month
                   </li>
-                  <li>
-                    <CheckIcon className="mr-2 inline-block h-4 w-4 text-gray-900 dark:text-gray-50" />
-                    Up to 16 GB RAM
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    ~190 hours of t3.medium
                   </li>
-                  <li>
-                    <CheckIcon className="mr-2 inline-block h-4 w-4 text-gray-900 dark:text-gray-50" />
-                    1 GPU for acceleration
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    Priority support
+                  </li>
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    Advanced monitoring
                   </li>
                 </ul>
-                <Link
-                  className="inline-flex h-10 w-full items-center justify-center rounded-md bg-gray-900 px-4 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
-                  href="/dashboard"
-                >
-                  Get Started
-                </Link>
-              </div>
-            </Card>
-            <Card className="space-y-4 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-950">
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold">High-Performance</h3>
-                <p className="text-gray-500 dark:text-gray-400">High-end hardware for demanding workloads.</p>
-              </div>
-              <div className="space-y-4">
-                <div className="space-y-1">
-                  <p className="text-4xl font-bold">$0.0025</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">per second</p>
+                <div className="mt-8">
+                  <Link
+                    href="/dashboard"
+                    className="block w-full rounded-lg bg-purple-600 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-purple-700 transition-colors"
+                  >
+                    Choose Pro
+                  </Link>
                 </div>
-                <ul className="space-y-2 text-sm text-gray-500 dark:text-gray-400">
-                  <li>
-                    <CheckIcon className="mr-2 inline-block h-4 w-4 text-gray-900 dark:text-gray-50" />
-                    Up to 8 CPU cores
+              </Card>
+
+              {/* Enterprise Plan */}
+              <Card className="relative overflow-hidden rounded-xl border-2 border-emerald-200 bg-white p-8 shadow-lg transition-all hover:shadow-xl dark:border-emerald-600 dark:bg-gray-900">
+                <div className="text-center">
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">Enterprise</h3>
+                  <div className="mt-4 flex items-baseline justify-center">
+                    <span className="text-5xl font-extrabold text-gray-900 dark:text-white">$50</span>
+                    <span className="ml-1 text-xl font-medium text-gray-500">/month</span>
+                  </div>
+                  <p className="mt-2 text-sm text-gray-500">6,750 credits monthly</p>
+                </div>
+                <ul className="mt-8 space-y-3 text-sm">
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    6,750 credits per month
                   </li>
-                  <li>
-                    <CheckIcon className="mr-2 inline-block h-4 w-4 text-gray-900 dark:text-gray-50" />
-                    Up to 32 GB RAM
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    ~85 hours of GPU instances
                   </li>
-                  <li>
-                    <CheckIcon className="mr-2 inline-block h-4 w-4 text-gray-900 dark:text-gray-50" />
-                    2 GPUs for acceleration
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    Dedicated support
+                  </li>
+                  <li className="flex items-center">
+                    <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                    Custom integrations
                   </li>
                 </ul>
-                <Link
-                  className="inline-flex h-10 w-full items-center justify-center rounded-md bg-gray-900 px-4 text-sm font-medium text-gray-50 shadow transition-colors hover:bg-gray-900/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950 disabled:pointer-events-none disabled:opacity-50 dark:bg-gray-50 dark:text-gray-900 dark:hover:bg-gray-50/90 dark:focus-visible:ring-gray-300"
-                  href="/dashboard"
-                >
-                  Get Started
-                </Link>
+                <div className="mt-8">
+                  <Link
+                    href="/dashboard"
+                    className="block w-full rounded-lg bg-emerald-600 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-emerald-700 transition-colors"
+                  >
+                    Contact Sales
+                  </Link>
+                </div>
+              </Card>
+            </div>
+
+            {/* Expandable section */}
+            <Collapsible className="w-full">
+              <CollapsibleContent>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8 mb-8">
+                  {/* Starter Plan */}
+                  <Card className="relative overflow-hidden rounded-xl border-2 border-blue-200 bg-white p-8 shadow-lg transition-all hover:shadow-xl dark:border-blue-600 dark:bg-gray-900">
+                    <div className="text-center">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">Starter</h3>
+                      <div className="mt-4 flex items-baseline justify-center">
+                        <span className="text-5xl font-extrabold text-gray-900 dark:text-white">$5</span>
+                        <span className="ml-1 text-xl font-medium text-gray-500">/month</span>
+                      </div>
+                      <p className="mt-2 text-sm text-gray-500">550 credits monthly</p>
+                    </div>
+                    <ul className="mt-8 space-y-3 text-sm">
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        550 credits per month
+                      </li>
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        ~350 hours of t3.micro
+                      </li>
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        Multiple cloud providers
+                      </li>
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        Email support
+                      </li>
+                    </ul>
+                    <div className="mt-8">
+                      <Link
+                        href="/dashboard"
+                        className="block w-full rounded-lg bg-blue-600 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                      >
+                        Choose Starter
+                      </Link>
+                    </div>
+                  </Card>
+
+                  {/* Business Plan */}
+                  <Card className="relative overflow-hidden rounded-xl border-2 border-orange-200 bg-white p-8 shadow-lg transition-all hover:shadow-xl dark:border-orange-600 dark:bg-gray-900">
+                    <div className="text-center">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">Business</h3>
+                      <div className="mt-4 flex items-baseline justify-center">
+                        <span className="text-5xl font-extrabold text-gray-900 dark:text-white">$25</span>
+                        <span className="ml-1 text-xl font-medium text-gray-500">/month</span>
+                      </div>
+                      <p className="mt-2 text-sm text-gray-500">3,200 credits monthly</p>
+                    </div>
+                    <ul className="mt-8 space-y-3 text-sm">
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        3,200 credits per month
+                      </li>
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        ~40 hours of GPU instances
+                      </li>
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        Team collaboration
+                      </li>
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        SLA guarantee
+                      </li>
+                    </ul>
+                    <div className="mt-8">
+                      <Link
+                        href="/dashboard"
+                        className="block w-full rounded-lg bg-orange-600 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-orange-700 transition-colors"
+                      >
+                        Choose Business
+                      </Link>
+                    </div>
+                  </Card>
+
+                  {/* Pay As You Go / Top-up Plan */}
+                  <Card className="relative overflow-hidden rounded-xl border-2 border-indigo-200 bg-white p-8 shadow-lg transition-all hover:shadow-xl dark:border-indigo-600 dark:bg-gray-900">
+                    <div className="text-center">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white">Pay As You Go</h3>
+                      <div className="mt-4 flex items-baseline justify-center">
+                        <span className="text-5xl font-extrabold text-gray-900 dark:text-white">$0.01</span>
+                        <span className="ml-1 text-xl font-medium text-gray-500">/credit</span>
+                      </div>
+                      <p className="mt-2 text-sm text-gray-500">Top up anytime</p>
+                    </div>
+                    <ul className="mt-8 space-y-3 text-sm">
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        Buy credits as needed
+                      </li>
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        No monthly commitment
+                      </li>
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        Credits never expire
+                      </li>
+                      <li className="flex items-center">
+                        <CheckIcon className="h-5 w-5 text-green-500 mr-3 flex-shrink-0" />
+                        Perfect for occasional use
+                      </li>
+                    </ul>
+                    <div className="mt-8">
+                      <Link
+                        href="/dashboard"
+                        className="block w-full rounded-lg bg-indigo-600 px-6 py-3 text-center text-sm font-semibold text-white hover:bg-indigo-700 transition-colors"
+                      >
+                        Buy Credits
+                      </Link>
+                    </div>
+                  </Card>
+                </div>
+              </CollapsibleContent>
+              
+              <CollapsibleTrigger className="flex w-full items-center justify-center gap-2 py-4 text-blue-600 hover:text-blue-700 transition-colors">
+                <span className="font-medium">View all plans</span>
+                <ChevronDownIcon className="h-5 w-5 transition-transform duration-300 [&[data-state=open]]:rotate-180" />
+              </CollapsibleTrigger>
+            </Collapsible>
+          </div>
+          
+          {/* VM Cost Reference */}
+          <div className="mt-16 mx-auto max-w-4xl">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">VM Instance Costs</h3>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">
+                Approximate runtime hours for popular instance types
+              </p>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+              <div className="grid grid-cols-5 gap-4 p-4 bg-gray-50 dark:bg-gray-800 font-semibold text-sm">
+                <div>Instance Type</div>
+                <div className="text-center">Free (150)</div>
+                <div className="text-center">Starter (550)</div>
+                <div className="text-center">Pro (1,200)</div>
+                <div className="text-center">Business (3,200)</div>
               </div>
-            </Card>
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                <div className="grid grid-cols-5 gap-4 p-4 text-sm">
+                  <div className="font-medium">cpx11 (0.75 credits/hr)</div>
+                  <div className="text-center">200 hours</div>
+                  <div className="text-center">733 hours</div>
+                  <div className="text-center">1,600 hours</div>
+                  <div className="text-center">4,267 hours</div>
+                </div>
+                <div className="grid grid-cols-5 gap-4 p-4 text-sm bg-gray-50/50 dark:bg-gray-800/50">
+                  <div className="font-medium">t3.micro (1.6 credits/hr)</div>
+                  <div className="text-center">94 hours</div>
+                  <div className="text-center">344 hours</div>
+                  <div className="text-center">750 hours</div>
+                  <div className="text-center">2,000 hours</div>
+                </div>
+                <div className="grid grid-cols-5 gap-4 p-4 text-sm">
+                  <div className="font-medium">t3.medium (6.2 credits/hr)</div>
+                  <div className="text-center">24 hours</div>
+                  <div className="text-center">89 hours</div>
+                  <div className="text-center">194 hours</div>
+                  <div className="text-center">516 hours</div>
+                </div>
+                <div className="grid grid-cols-5 gap-4 p-4 text-sm bg-gray-50/50 dark:bg-gray-800/50">
+                  <div className="font-medium">g4dn.xlarge (78.9 credits/hr)</div>
+                  <div className="text-center">1.9 hours</div>
+                  <div className="text-center">7.0 hours</div>
+                  <div className="text-center">15.2 hours</div>
+                  <div className="text-center">40.6 hours</div>
+                </div>
+                <div className="grid grid-cols-5 gap-4 p-4 text-sm">
+                  <div className="font-medium">p3.2xlarge (459 credits/hr)</div>
+                  <div className="text-center">0.3 hours</div>
+                  <div className="text-center">1.2 hours</div>
+                  <div className="text-center">2.6 hours</div>
+                  <div className="text-center">7.0 hours</div>
+                </div>
+              </div>
+            </div>
+            <p className="text-center text-xs text-gray-400 mt-4">
+              * Unused credits roll over monthly.
+            </p>
           </div>
         </div>
       </section>
@@ -192,23 +400,23 @@ export default function HomePage() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Our pay-as-you-go pricing is based on the actual time your AI models run on our infrastructure.
-                    You'll be charged a per-second rate based on the hardware tier you choose - CPU, GPU, or
-                    High-Performance. This allows you to scale your usage up or down as needed without any fixed monthly
-                    fees.
+                    Our pay-as-you-go pricing is based on the actual time your VMs run on our infrastructure.
+                    You'll be charged credits per hour based on the instance type you choose - Basic, Standard, or
+                    GPU VMs. This allows you to scale your usage up or down as needed without any fixed monthly
+                    fees. You get 150 free credits per month plus a 100 credit welcome bonus.
                   </p>
                 </CollapsibleContent>
               </Collapsible>
               <Collapsible className="rounded-md border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-800 dark:bg-gray-950">
                 <CollapsibleTrigger className="flex w-full items-center justify-between">
-                  <h4 className="text-lg font-medium">Can I switch between hardware tiers?</h4>
+                  <h4 className="text-lg font-medium">Can I launch multiple VMs simultaneously?</h4>
                   <ChevronDownIcon className="h-5 w-5 transition-transform duration-300 [&[data-state=open]]:rotate-180" />
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Yes, you can switch between hardware tiers at any time. Simply select the tier that best fits your
-                    current workload and you'll be charged the corresponding per-second rate. This flexibility allows
-                    you to optimize your costs as your needs change.
+                    Yes, you can launch multiple VMs simultaneously across different providers (AWS and Hetzner). 
+                    Each VM will be charged independently based on its instance type and runtime. You can manage 
+                    all your VMs from a single dashboard with SSH access details for each.
                   </p>
                 </CollapsibleContent>
               </Collapsible>
@@ -219,9 +427,9 @@ export default function HomePage() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Yes, we do offer volume discounts for customers with high usage. The more you use our platform, the
-                    lower your per-second rate will be. We also have special pricing for academic and non-profit
-                    organizations. Contact our sales team to learn more about our discount programs.
+                    Currently we offer a generous free tier with 150 credits per month plus a 100 credit welcome bonus.
+                    We're working on additional subscription plans and volume pricing for heavy users. Stay tuned for
+                    enterprise plans with higher credit allocations and priority support.
                   </p>
                 </CollapsibleContent>
               </Collapsible>
@@ -232,9 +440,9 @@ export default function HomePage() {
                 </CollapsibleTrigger>
                 <CollapsibleContent>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Yes, we offer a 30-day money-back guarantee on all of our services. If you're not satisfied with our
-                    platform, you can request a full refund. We also provide a 14-day free trial for new customers to
-                    test out our capabilities.
+                    Yes! New users get 100 welcome bonus credits plus 150 free credits every month. This gives you 
+                    plenty of time to test our platform with real VMs. You can launch a t3.micro instance and run 
+                    it for over 160 hours with just your welcome bonus - perfect for trying out the service.
                   </p>
                 </CollapsibleContent>
               </Collapsible>

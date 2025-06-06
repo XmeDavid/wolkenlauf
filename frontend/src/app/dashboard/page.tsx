@@ -1,12 +1,14 @@
 'use client';
 import { Button } from "~/components/ui/button";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import VmRequestForm, { type VmRequestData } from "~/components/dashboard/vm-request-form";
 import InstancesTable from "~/components/dashboard/instances-table";
 
 export default function Dashboard() {
   const [showVmForm, setShowVmForm] = useState(false);
   const [isLaunching, setIsLaunching] = useState(false);
+  const router = useRouter();
 
   const handleVmRequest = async (data: VmRequestData) => {
     setIsLaunching(true);
@@ -40,6 +42,11 @@ export default function Dashboard() {
     <section className="h-full w-full flex flex-col">
       <div className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">
         <h2 className="text-lg font-semibold">Virtual Machines</h2>
+        <div className="ml-auto flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/profile')}>
+            💳 Credits & Profile
+          </Button>
+        </div>
       </div>
       <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
         <div className="flex items-center">

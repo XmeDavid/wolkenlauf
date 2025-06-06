@@ -2,8 +2,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
 import { instances } from "~/server/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { env } from "~/env";
+import { softDeleteInstance } from "~/server/db/queries/instances";
 
 export async function DELETE(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function DELETE(
     const url = new URL(request.url);
     const action = url.searchParams.get('action');
 
-    // Verify the instance belongs to the user
+    // Verify the instance belongs to the user (excluding soft deleted)
     const instance = await db
       .select()
       .from(instances)
@@ -34,7 +35,7 @@ export async function DELETE(
     const instanceData = instance[0];
 
     if (action === 'remove') {
-      // Remove from database only (for terminated instances)
+      // Hard delete from database (for terminated instances) - temporary until soft delete is implemented
       if (instanceData.status !== 'terminated') {
         return NextResponse.json(
           { error: "Can only remove terminated instances" }, 

@@ -8,6 +8,7 @@ import Link from "next/link";
 import { CodeIcon } from "~/components/icons";
 
 import { SignedIn, UserButton } from "@clerk/nextjs";
+import { Providers } from "~/lib/providers";
 
 const fontSans = InterSans({
   subsets: ["latin"],
@@ -58,7 +59,9 @@ export default function RootLayout({
             </SignedIn>
           </header>
 
-          {children}
+          <Providers>
+            {children}
+          </Providers>
         </body>
       </html>
     </ClerkProvider>

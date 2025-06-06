@@ -13,6 +13,9 @@ export const env = createEnv({
     AWS_BUCKET_NAME: z.string(),
     POSTGRES_URL: z.string().url(),
     VM_PROVISIONER_URL: z.string().url().default("http://localhost:8080"),
+    STRIPE_SECRET_KEY: z.string(),
+    STRIPE_WEBHOOK_SECRET: z.string().optional(),
+    BILLING_SERVICE_API_KEY: z.string().optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
       .default("development"),
@@ -24,7 +27,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string(),
   },
 
   /**
@@ -38,8 +41,11 @@ export const env = createEnv({
     AWS_BUCKET_NAME: process.env.AWS_BUCKET_NAME,
     POSTGRES_URL: process.env.POSTGRES_URL,
     VM_PROVISIONER_URL: process.env.VM_PROVISIONER_URL,
+    STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
+    STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    BILLING_SERVICE_API_KEY: process.env.BILLING_SERVICE_API_KEY,
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     NODE_ENV: process.env.NODE_ENV,
-    // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

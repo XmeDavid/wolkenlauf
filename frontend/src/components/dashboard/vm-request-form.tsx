@@ -14,6 +14,7 @@ const PRESETS = [
     provider: "hetzner",
     instanceType: "cpx11",
     hourlyRate: 0.005,
+    creditsPerHour: ((0.005 * 100) * 1.5),
     specs: "2 vCPU, 2GB RAM"
   },
   {
@@ -23,6 +24,7 @@ const PRESETS = [
     provider: "aws", 
     instanceType: "t3.medium",
     hourlyRate: 0.0416,
+    creditsPerHour: ((0.0416 * 100) * 1.5),
     specs: "2 vCPU, 4GB RAM (CPU only)"
   },
   {
@@ -32,6 +34,7 @@ const PRESETS = [
     provider: "aws",
     instanceType: "g4dn.xlarge",
     hourlyRate: 0.526,
+    creditsPerHour: ((0.526 * 100) * 1.5),
     specs: "4 vCPU, 16GB RAM, T4 GPU"
   },
   {
@@ -41,6 +44,7 @@ const PRESETS = [
     provider: "aws", 
     instanceType: "p3.2xlarge",
     hourlyRate: 3.06,
+    creditsPerHour: ((3.06 * 100) * 1.5),
     specs: "8 vCPU, 61GB RAM, V100 GPU"
   },
   {
@@ -50,6 +54,7 @@ const PRESETS = [
     provider: "aws",
     instanceType: "p4d.24xlarge", 
     hourlyRate: 32.77,
+    creditsPerHour: ((32.77 * 100) * 1.5),
     specs: "96 vCPU, 1152GB RAM, 8x A100 GPU"
   },
   {
@@ -59,37 +64,38 @@ const PRESETS = [
     provider: "custom",
     instanceType: "",
     hourlyRate: 0,
+    creditsPerHour: 0,
     specs: "Configure manually"
   }
 ];
 
 // Hetzner instance types (updated with real available types)
 const HETZNER_INSTANCES = [
-  { value: "cpx11", label: "cpx11 - 2 vCPU, 2GB RAM", hourlyRate: 0.005, provider: "hetzner" },
-  { value: "cpx21", label: "cpx21 - 3 vCPU, 4GB RAM", hourlyRate: 0.008, provider: "hetzner" },
-  { value: "cpx31", label: "cpx31 - 4 vCPU, 8GB RAM", hourlyRate: 0.015, provider: "hetzner" },
-  { value: "cx22", label: "cx22 - 2 vCPU, 4GB RAM", hourlyRate: 0.006, provider: "hetzner" },
-  { value: "cx32", label: "cx32 - 4 vCPU, 8GB RAM", hourlyRate: 0.012, provider: "hetzner" },
-  { value: "cx42", label: "cx42 - 8 vCPU, 16GB RAM", hourlyRate: 0.024, provider: "hetzner" },
-  { value: "cx52", label: "cx52 - 16 vCPU, 32GB RAM", hourlyRate: 0.048, provider: "hetzner" },
+  { value: "cpx11", label: "cpx11 - 2 vCPU, 2GB RAM", hourlyRate: 0.005, creditsPerHour: ((0.005 * 100) * 1.5), provider: "hetzner" },
+  { value: "cpx21", label: "cpx21 - 3 vCPU, 4GB RAM", hourlyRate: 0.008, creditsPerHour: ((0.008 * 100) * 1.5), provider: "hetzner" },
+  { value: "cpx31", label: "cpx31 - 4 vCPU, 8GB RAM", hourlyRate: 0.015, creditsPerHour: ((0.015 * 100) * 1.5), provider: "hetzner" },
+  { value: "cx22", label: "cx22 - 2 vCPU, 4GB RAM", hourlyRate: 0.006, creditsPerHour: ((0.006 * 100) * 1.5), provider: "hetzner" },
+  { value: "cx32", label: "cx32 - 4 vCPU, 8GB RAM", hourlyRate: 0.012, creditsPerHour: ((0.012 * 100) * 1.5), provider: "hetzner" },
+  { value: "cx42", label: "cx42 - 8 vCPU, 16GB RAM", hourlyRate: 0.024, creditsPerHour: ((0.024 * 100) * 1.5), provider: "hetzner" },
+  { value: "cx52", label: "cx52 - 16 vCPU, 32GB RAM", hourlyRate: 0.048, creditsPerHour: ((0.048 * 100) * 1.5), provider: "hetzner" },
 ];
 
 // AWS CPU instances  
 const AWS_CPU_INSTANCES = [
-  { value: "t3.micro", label: "t3.micro - 1 vCPU, 1GB RAM", hourlyRate: 0.0104, provider: "aws" },
-  { value: "t3.small", label: "t3.small - 2 vCPU, 2GB RAM", hourlyRate: 0.0208, provider: "aws" },
-  { value: "t3.medium", label: "t3.medium - 2 vCPU, 4GB RAM", hourlyRate: 0.0416, provider: "aws" },
-  { value: "t3.large", label: "t3.large - 2 vCPU, 8GB RAM", hourlyRate: 0.0832, provider: "aws" },
-  { value: "t3.xlarge", label: "t3.xlarge - 4 vCPU, 16GB RAM", hourlyRate: 0.1664, provider: "aws" },
+  { value: "t3.micro", label: "t3.micro - 1 vCPU, 1GB RAM", hourlyRate: 0.0104, creditsPerHour: ((0.0104 * 100) * 1.5), provider: "aws" },
+  { value: "t3.small", label: "t3.small - 2 vCPU, 2GB RAM", hourlyRate: 0.0208, creditsPerHour: ((0.0208 * 100) * 1.5), provider: "aws" },
+  { value: "t3.medium", label: "t3.medium - 2 vCPU, 4GB RAM", hourlyRate: 0.0416, creditsPerHour: ((0.0416 * 100) * 1.5), provider: "aws" },
+  { value: "t3.large", label: "t3.large - 2 vCPU, 8GB RAM", hourlyRate: 0.0832, creditsPerHour: ((0.0832 * 100) * 1.5), provider: "aws" },
+  { value: "t3.xlarge", label: "t3.xlarge - 4 vCPU, 16GB RAM", hourlyRate: 0.1664, creditsPerHour: ((0.1664 * 100) * 1.5), provider: "aws" },
 ];
 
 // AWS GPU instances
 const AWS_GPU_INSTANCES = [
-  { value: "g4dn.xlarge", label: "g4dn.xlarge - 4 vCPU, 16GB RAM, T4 GPU", hourlyRate: 0.526, spotPrice: 0.15, provider: "aws" },
-  { value: "g4dn.2xlarge", label: "g4dn.2xlarge - 8 vCPU, 32GB RAM, T4 GPU", hourlyRate: 0.752, spotPrice: 0.22, provider: "aws" },
-  { value: "p3.2xlarge", label: "p3.2xlarge - 8 vCPU, 61GB RAM, V100 GPU", hourlyRate: 3.06, spotPrice: 1.0, provider: "aws" },
-  { value: "p3.8xlarge", label: "p3.8xlarge - 32 vCPU, 244GB RAM, 4x V100 GPU", hourlyRate: 12.24, spotPrice: 4.0, provider: "aws" },
-  { value: "p4d.24xlarge", label: "p4d.24xlarge - 96 vCPU, 1152GB RAM, 8x A100 GPU", hourlyRate: 32.77, spotPrice: 10.0, provider: "aws" },
+  { value: "g4dn.xlarge", label: "g4dn.xlarge - 4 vCPU, 16GB RAM, T4 GPU", hourlyRate: 0.526, spotPrice: 0.15, creditsPerHour: ((0.526 * 100) * 1.5), creditsPerHourSpot: ((0.15 * 100) * 1.5), provider: "aws" },
+  { value: "g4dn.2xlarge", label: "g4dn.2xlarge - 8 vCPU, 32GB RAM, T4 GPU", hourlyRate: 0.752, spotPrice: 0.22, creditsPerHour: ((0.752 * 100) * 1.5), creditsPerHourSpot: ((0.22 * 100) * 1.5), provider: "aws" },
+  { value: "p3.2xlarge", label: "p3.2xlarge - 8 vCPU, 61GB RAM, V100 GPU", hourlyRate: 3.06, spotPrice: 1.0, creditsPerHour: ((3.06 * 100) * 1.5), creditsPerHourSpot: ((1.0 * 100) * 1.5), provider: "aws" },
+  { value: "p3.8xlarge", label: "p3.8xlarge - 32 vCPU, 244GB RAM, 4x V100 GPU", hourlyRate: 12.24, spotPrice: 4.0, creditsPerHour: ((12.24 * 100) * 1.5), creditsPerHourSpot: ((4.0 * 100) * 1.5), provider: "aws" },
+  { value: "p4d.24xlarge", label: "p4d.24xlarge - 96 vCPU, 1152GB RAM, 8x A100 GPU", hourlyRate: 32.77, spotPrice: 10.0, creditsPerHour: ((32.77 * 100) * 1.5), creditsPerHourSpot: ((10.0 * 100) * 1.5), provider: "aws" },
 ];
 
 const AWS_REGIONS = [
@@ -116,7 +122,6 @@ export interface VmRequestData {
   provider: string;
   instanceType: string;
   region: string;
-  autoTerminateMinutes: number;
   useSpotInstance?: boolean;
   image?: string;
 }
@@ -129,7 +134,6 @@ export default function VmRequestForm({ onSubmit, isLoading = false }: VmRequest
     provider: "aws",
     instanceType: "t3.medium",
     region: "us-east-1",
-    autoTerminateMinutes: 60,
     useSpotInstance: false,
     image: "",
   });
@@ -166,18 +170,20 @@ export default function VmRequestForm({ onSubmit, isLoading = false }: VmRequest
     return formData.provider === "aws" ? AWS_REGIONS : HETZNER_REGIONS;
   };
 
-  // Calculate cost
-  const calculateCost = () => {
+  // Get current hourly rate in credits (converted from USD to credits)
+  const getCurrentHourlyCredits = () => {
     const instances = getAvailableInstances();
     const selectedInstance = instances.find(i => i.value === formData.instanceType);
-    if (!selectedInstance) return "0";
+    if (!selectedInstance) return 0;
     
-    let rate = selectedInstance.hourlyRate;
+    let rateUsd = selectedInstance.hourlyRate;
     if (formData.useSpotInstance && 'spotPrice' in selectedInstance && typeof selectedInstance.spotPrice === 'number' && selectedInstance.spotPrice > 0) {
-      rate = selectedInstance.spotPrice;
+      rateUsd = selectedInstance.spotPrice;
     }
     
-    return (rate * (formData.autoTerminateMinutes / 60)).toFixed(4);
+    // Convert USD to credits: $0.0416/hr = 4.16 cents/hr = 4.16 credits/hr base cost
+    // With 50% markup: 4.16 * 1.5 = 6.24 credits/hr
+    return (rateUsd * 100) * 1.5;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -246,9 +252,9 @@ export default function VmRequestForm({ onSubmit, isLoading = false }: VmRequest
                       <div className="font-medium text-sm">{preset.name}</div>
                       <div className="text-xs text-gray-500">{preset.description}</div>
                       <div className="text-xs text-gray-600 mt-1">{preset.specs}</div>
-                      {preset.hourlyRate > 0 && (
-                        <div className="text-xs font-mono text-green-600">
-                          ${preset.hourlyRate}/hour
+                      {preset.creditsPerHour > 0 && (
+                        <div className="text-xs font-mono text-orange-600">
+                          {preset.creditsPerHour.toFixed(1)} credits/hour
                         </div>
                       )}
                     </div>
@@ -290,8 +296,8 @@ export default function VmRequestForm({ onSubmit, isLoading = false }: VmRequest
                 >
                   {getAvailableInstances().map(instance => (
                     <option key={instance.value} value={instance.value}>
-                      {instance.label} - ${instance.hourlyRate}/hr
-                      {'spotPrice' in instance && typeof instance.spotPrice === 'number' && instance.spotPrice > 0 && ` (Spot: $${instance.spotPrice}/hr)`}
+                      {instance.label} - {instance.creditsPerHour.toFixed(1)} credits/hr
+                      {'creditsPerHourSpot' in instance && typeof instance.creditsPerHourSpot === 'number' && instance.creditsPerHourSpot > 0 && ` (Spot: ${instance.creditsPerHourSpot.toFixed(1)} credits/hr)`}
                     </option>
                   ))}
                 </select>
@@ -333,42 +339,41 @@ export default function VmRequestForm({ onSubmit, isLoading = false }: VmRequest
             </div>
           )}
 
-          {/* Auto-terminate */}
-          <div className="space-y-2">
-            <label htmlFor="autoTerminate" className="text-sm font-medium">
-              Auto-terminate after (minutes)
-            </label>
-            <Input
-              id="autoTerminate"
-              type="number"
-              min="15"
-              max="1440"
-              value={formData.autoTerminateMinutes}
-              onChange={handleChange("autoTerminateMinutes")}
-              required
-            />
-            <p className="text-xs text-gray-500">
-              VM will automatically terminate after this duration to prevent runaway costs
-            </p>
-          </div>
 
-          {/* Cost Estimate */}
+          {/* Cost Information */}
           <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-md border">
-            <h4 className="font-medium text-sm mb-2">💰 Cost Estimate</h4>
+            <h4 className="font-medium text-sm mb-2">💰 Billing Information</h4>
             {selectedPresetInfo && selectedPresetInfo.id !== "custom" ? (
               <div>
                 <p className="text-sm text-gray-600">
-                  <span className="font-semibold">{selectedPresetInfo.name}</span>: <span className="font-mono">${selectedPresetInfo.hourlyRate}/hour</span>
+                  <span className="font-semibold">{selectedPresetInfo.name}</span>
                 </p>
                 <p className="text-sm text-gray-600">
-                  Estimated cost: <span className="font-mono text-lg text-green-600">${(selectedPresetInfo.hourlyRate * (formData.autoTerminateMinutes / 60)).toFixed(4)}</span> for {formData.autoTerminateMinutes} minutes
+                  <span className="font-mono text-lg text-orange-600">{selectedPresetInfo.creditsPerHour.toFixed(1)} credits/hour</span>
+                </p>
+                <p className="text-xs text-gray-500">
+                  ~{Math.round(selectedPresetInfo.creditsPerHour * 24 * 30).toLocaleString()} credits/month
+                </p>
+                <p className="text-sm text-gray-600 mt-2">
+                  VM will run until terminated or credits are exhausted
                 </p>
               </div>
             ) : (
-              <p className="text-sm text-gray-600">
-                Estimated cost: <span className="font-mono text-lg text-green-600">${calculateCost()}</span> for {formData.autoTerminateMinutes} minutes
-              </p>
+              <div>
+                <p className="text-sm text-gray-600">
+                  Billing rate: <span className="font-mono text-lg text-orange-600">{getCurrentHourlyCredits().toFixed(1)} credits/hour</span>
+                </p>
+                <p className="text-xs text-gray-500">
+                  ~{Math.round(getCurrentHourlyCredits() * 24 * 30).toLocaleString()} credits/month
+                </p>
+                <p className="text-sm text-gray-600 mt-2">
+                  VM will run until terminated or credits are exhausted
+                </p>
+              </div>
             )}
+            <p className="text-xs text-gray-500 mt-2">
+              💡 Your VM will automatically terminate if your credit balance goes below -100 credits
+            </p>
           </div>
 
           <Button 

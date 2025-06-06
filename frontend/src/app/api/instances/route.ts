@@ -42,11 +42,10 @@ export async function POST(request: NextRequest) {
       provider: string;
       instanceType: string;
       region: string;
-      autoTerminateMinutes?: number;
       useSpotInstance?: boolean;
       image?: string;
     };
-    const { name, provider, instanceType, region, autoTerminateMinutes, useSpotInstance, image } = body;
+    const { name, provider, instanceType, region, useSpotInstance, image } = body;
 
     // Validate required fields
     if (!name || !provider || !instanceType || !region) {
@@ -64,7 +63,6 @@ export async function POST(request: NextRequest) {
       region,
       useSpotInstance: useSpotInstance ?? false,
       image: image ?? "", // Let Go backend choose correct AMI
-      autoTerminateMinutes: parseInt(autoTerminateMinutes?.toString() ?? "60", 10),
       userId,
     };
 
@@ -123,11 +121,30 @@ export async function POST(request: NextRequest) {
           sshPassword: vmResponse.sshPassword,
           useSpotInstance: useSpotInstance ?? false,
           image: vmResponse.image ?? vmRequest.image,
-          autoTerminateMinutes: parseInt(autoTerminateMinutes?.toString() ?? "60", 10),
           createdAt: new Date(),
           updatedAt: new Date(),
         })
         .returning();
+
+      // Create initial usage record for billing tracking
+      try {
+        const { usageRecords } = await import("~/server/db/schema");
+        await db
+          .insert(usageRecords)
+          .values({
+            userId,
+            instanceId: newInstance[0]!.id,
+            startTime: new Date(),
+            creditsCharged: "0.00",
+            cloudCostUsd: "0.0000",
+            instanceType: instanceType || "unknown",
+            provider: provider || "unknown",
+            region: region || "unknown",
+          });
+        console.log(`📝 Created usage record for VM ${newInstance[0]!.id}`);
+      } catch (error) {
+        console.error("Failed to create usage record:", error);
+      }
 
       // Start monitoring the VM status
       setTimeout(() => {
