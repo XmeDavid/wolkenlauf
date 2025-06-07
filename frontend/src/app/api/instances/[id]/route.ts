@@ -4,7 +4,7 @@ import { db } from "~/server/db";
 import { instances } from "~/server/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
 import { env } from "~/env";
-import { softDeleteInstance } from "~/server/db/queries/instances";
+import { softDeleteInstance, calculateInstanceCost, deductCredits, getInstance } from "~/server/db/queries/instances";
 
 export async function DELETE(
   request: NextRequest,
@@ -35,7 +35,7 @@ export async function DELETE(
     const instanceData = instance[0];
 
     if (action === 'remove') {
-      // Hard delete from database (for terminated instances) - temporary until soft delete is implemented
+      // Soft delete from UI (preserves billing history)
       if (instanceData.status !== 'terminated') {
         return NextResponse.json(
           { error: "Can only remove terminated instances" }, 
@@ -43,12 +43,11 @@ export async function DELETE(
         );
       }
 
-      await db
-        .delete(instances)
-        .where(eq(instances.id, instanceId));
+      // Use soft delete to preserve usage records for billing
+      await softDeleteInstance(instanceId, userId);
 
-      console.log(`Instance ${instanceId} removed from database`);
-      return NextResponse.json({ message: "Instance removed successfully" });
+      console.log(`Instance ${instanceId} soft deleted (preserved for billing)`);
+      return NextResponse.json({ message: "Instance removed from UI successfully" });
     } else {
       // Terminate the VM (default action)
       if (instanceData.status === 'terminated') {
@@ -83,14 +82,45 @@ export async function DELETE(
       }
 
       // Only update database if cloud termination succeeded
+      const terminationTime = new Date();
       await db
         .update(instances)
         .set({
           status: "terminated",
-          terminatedAt: new Date(),
-          updatedAt: new Date(),
+          terminatedAt: terminationTime,
+          updatedAt: terminationTime,
         })
         .where(eq(instances.id, instanceId));
+
+      // Calculate final billing for the terminated VM
+      try {
+        const updatedInstance = await getInstance(instanceId, userId);
+        if (updatedInstance && updatedInstance.launchedAt) {
+          const cost = calculateInstanceCost(updatedInstance);
+          
+          if (cost.creditsCharged > 0) {
+            console.log(`💰 Billing ${cost.creditsCharged.toFixed(2)} credits for VM ${instanceId}`);
+            
+            const billingResult = await deductCredits(
+              userId,
+              cost.creditsCharged,
+              `VM termination: ${updatedInstance.name} (${updatedInstance.provider} ${updatedInstance.instanceType}) - ${cost.runtimeHours.toFixed(2)}h`,
+              instanceId
+            );
+            
+            if (billingResult.success) {
+              console.log(`✅ Successfully billed ${cost.creditsCharged.toFixed(2)} credits for terminated VM. New balance: ${billingResult.newBalance.toFixed(2)}`);
+            } else {
+              console.error(`❌ Failed to bill credits: ${billingResult.overdraft ? 'Overdraft limit exceeded' : 'Unknown error'}`);
+            }
+          } else {
+            console.log(`ℹ️ No billing required for VM ${instanceId} (never launched or 0 runtime)`);
+          }
+        }
+      } catch (billingError) {
+        console.error(`❌ Failed to process billing for terminated VM ${instanceId}:`, billingError);
+        // Don't fail the termination if billing fails
+      }
 
       console.log(`Instance ${instanceId} successfully terminated and marked in database`);
       return NextResponse.json({ message: "Instance terminated successfully" });

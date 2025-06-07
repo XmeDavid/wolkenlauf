@@ -5,6 +5,7 @@ import { env } from '~/env.js';
 import { db } from '~/server/db';
 import { users, creditTransactions } from '~/server/db/schema';
 import { eq } from 'drizzle-orm';
+import { addCredits } from '~/server/db/queries/instances';
 
 export async function POST(request: NextRequest) {
   const body = await request.text();
@@ -17,11 +18,18 @@ export async function POST(request: NextRequest) {
   let event;
 
   try {
-    event = stripe.webhooks.constructEvent(
-      body,
-      signature,
-      env.STRIPE_WEBHOOK_SECRET || ''
-    );
+    if (env.STRIPE_WEBHOOK_SECRET) {
+      // Verify webhook signature if secret is provided
+      event = stripe.webhooks.constructEvent(
+        body,
+        signature,
+        env.STRIPE_WEBHOOK_SECRET
+      );
+    } else {
+      // Skip verification for development (not recommended for production)
+      console.warn('Webhook signature verification skipped - no secret provided');
+      event = JSON.parse(body);
+    }
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
@@ -42,16 +50,30 @@ export async function POST(request: NextRequest) {
           // Handle subscription purchase
           console.log(`Subscription completed for user ${userId}, plan ${planId}`);
           
-          // Update user's plan in database
-          await db.update(users)
-            .set({
+          // First, ensure user exists in the users table
+          const existingUser = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
+          
+          if (existingUser.length === 0) {
+            // Create new user record
+            await db.insert(users).values({
+              clerkId: userId,
               subscriptionPlan: planId,
               subscriptionStatus: 'active',
               stripeCustomerId: session.customer as string,
               stripeSubscriptionId: session.subscription as string,
-              updatedAt: new Date(),
-            })
-            .where(eq(users.clerkId, userId));
+            });
+          } else {
+            // Update existing user's plan
+            await db.update(users)
+              .set({
+                subscriptionPlan: planId,
+                subscriptionStatus: 'active',
+                stripeCustomerId: session.customer as string,
+                stripeSubscriptionId: session.subscription as string,
+                updatedAt: new Date(),
+              })
+              .where(eq(users.clerkId, userId));
+          }
 
           // Add monthly credits allocation
           const planCredits: Record<string, number> = {
@@ -63,43 +85,31 @@ export async function POST(request: NextRequest) {
           const plan = planCredits[planId];
 
           if (plan) {
-            await db.insert(creditTransactions).values({
-              userId: userId,
-              type: 'monthly_allocation',
-              amount: plan.toString(),
-              description: `Monthly allocation for ${planId} plan`,
-              balanceBefore: "0.00", // Will be updated by trigger
-              balanceAfter: "0.00",  // Will be updated by trigger
-              metadata: {
-                planId,
-                subscriptionId: session.subscription,
-              },
-            });
+            await addCredits(
+              userId,
+              plan,
+              'allocation',
+              `Monthly allocation for ${planId} plan`
+            );
           }
 
-        } else if (type === 'credit-topup' && creditAmount) {
+        } else if (type === 'credit_topup' && creditAmount) {
           // Handle credit top-up purchase
           const credits = parseInt(creditAmount);
           console.log(`Credit top-up completed for user ${userId}, ${credits} credits`);
 
-          await db.insert(creditTransactions).values({
-            userId: userId,
-            type: 'purchase',
-            amount: credits.toString(),
-            description: `Credit top-up: ${credits} credits`,
-            balanceBefore: "0.00", // Will be updated by trigger
-            balanceAfter: "0.00",  // Will be updated by trigger
-            metadata: {
-              type: 'credit-topup',
-              stripeSessionId: session.id,
-            },
-          });
+          await addCredits(
+            userId,
+            credits,
+            'topup',
+            `Credit top-up: ${credits} credits`
+          );
         }
         break;
       }
 
       case 'invoice.payment_succeeded': {
-        const invoice = event.data.object as any;
+        const invoice = event.data.object;
         if (!invoice.subscription) {
           console.error('No subscription ID in invoice');
           break;
@@ -124,19 +134,12 @@ export async function POST(request: NextRequest) {
         if (plan) {
           console.log(`Monthly payment succeeded for user ${userId}, adding ${plan} credits`);
           
-          await db.insert(creditTransactions).values({
-            userId: userId,
-            type: 'monthly_allocation',
-            amount: plan.toString(),
-            description: `Monthly allocation for ${planId} plan`,
-            balanceBefore: "0.00", // Will be updated by trigger
-            balanceAfter: "0.00",  // Will be updated by trigger
-            metadata: {
-              planId,
-              subscriptionId: subscription.id,
-              invoiceId: invoice.id,
-            },
-          });
+          await addCredits(
+            userId,
+            plan,
+            'allocation',
+            `Monthly allocation for ${planId} plan`
+          );
         }
         break;
       }

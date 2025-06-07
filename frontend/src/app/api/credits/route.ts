@@ -7,6 +7,9 @@ import {
   allocateMonthlyCredits,
   calculateUserUsage
 } from "~/server/db/queries/instances";
+import { db } from "~/server/db";
+import { users } from "~/server/db/schema";
+import { eq } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,6 +24,20 @@ export async function GET(request: NextRequest) {
       // Check if user needs monthly allocation
       const monthlyAllocation = await allocateMonthlyCredits(userId);
 
+      // Get user's subscription plan for correct allocation amount
+      const userRecord = await db.select().from(users).where(eq(users.clerkId, userId)).limit(1);
+      const userPlan = userRecord.length > 0 ? userRecord[0]!.subscriptionPlan : 'free';
+
+      // Get plan-specific monthly allocation
+      const planAllocations: Record<string, number> = {
+        free: 150,
+        starter: 550,
+        pro: 1200,
+        business: 3200,
+        enterprise: 6750,
+      };
+      const planMonthlyAllocation = planAllocations[userPlan] || 150;
+
       // Get current credits, transactions, and calculate usage from time-based billing
       const [credits, transactions, userUsage] = await Promise.all([
         getUserCredits(userId),
@@ -28,22 +45,38 @@ export async function GET(request: NextRequest) {
         calculateUserUsage(userId)
       ]);
 
-      // Next allocation date (first day of next month)
+      // Calculate this month's spending from credit transactions (usage/subscription payments)
       const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const thisMonthSpentFromTransactions = transactions
+        .filter(t => t.type === 'usage' && new Date(t.createdAt) >= startOfMonth)
+        .reduce((total, t) => total + Math.abs(Number(t.amount)), 0);
+      
+      // For VMs that haven't been billed yet, include their calculated costs in this month's usage
+      const unbilledThisMonth = userUsage.thisMonth;
+      const thisMonthSpent = thisMonthSpentFromTransactions + unbilledThisMonth;
+
+      // Next allocation date (first day of next month)
       const nextAllocationDate = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+      // Calculate live balance that reflects real-time VM usage
+      const storedBalance = Number(credits.currentBalance);
+      const liveBalance = storedBalance - userUsage.total;
 
       return NextResponse.json({
         credits: {
-          currentBalance: Number(credits.currentBalance),
-          monthlyAllocation: credits.monthlyAllocation,
+          currentBalance: liveBalance, // Live balance reflecting VM usage
+          storedBalance, // Original DB balance for reference
+          monthlyAllocation: planMonthlyAllocation, // Use plan-specific allocation
           totalEarned: Number(credits.totalEarned),
-          totalSpent: Number(credits.totalSpent), // Use totalSpent from database
+          totalSpent: Math.max(Number(credits.totalSpent), userUsage.total), // Include calculated VM costs if higher than DB value
           overdraftLimit: credits.overdraftLimit,
           nextAllocationDate: nextAllocationDate.toISOString(),
           lastAllocationDate: credits.lastAllocationDate,
         },
+        userPlan,
         usage: {
-          thisMonth: userUsage.thisMonth,
+          thisMonth: thisMonthSpent, // Use actual credit transactions instead of VM calculation
           total: userUsage.total,
           runningVMs: userUsage.runningVMs,
         },
@@ -61,10 +94,11 @@ export async function GET(request: NextRequest) {
     } catch (dbError) {
       console.warn("Database not available, using mock data:", dbError);
       
-      // Fallback to mock data if database is not ready
+      // Fallback to mock data if database is not ready  
       const mockCreditsData = {
         credits: {
-          currentBalance: 125,
+          currentBalance: 125, // Live balance (250 - 125 usage)
+          storedBalance: 250,  // Original stored balance
           monthlyAllocation: 150,
           totalEarned: 250,
           totalSpent: 125,
@@ -72,6 +106,7 @@ export async function GET(request: NextRequest) {
           nextAllocationDate: new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toISOString(),
           lastAllocationDate: new Date().toISOString(),
         },
+        userPlan: 'free',
         usage: {
           thisMonth: 35,
           total: 125,

@@ -40,7 +40,7 @@ export default function Dashboard() {
 
   return (
     <section className="h-full w-full flex flex-col">
-      <div className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">
+      <div className="flex h-16 lg:h-[70px] items-center gap-4 border-b bg-gray-100/40 px-6 dark:bg-gray-800/40">
         <h2 className="text-lg font-semibold">Virtual Machines</h2>
         <div className="ml-auto flex items-center gap-2">
           <Button variant="ghost" size="sm" onClick={() => router.push('/dashboard/profile')}>
@@ -48,7 +48,7 @@ export default function Dashboard() {
           </Button>
         </div>
       </div>
-      <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-6">
+      <div className="flex flex-1 flex-col gap-4 p-6 md:gap-8 md:p-8">
         <div className="flex items-center">
           <h1 className="font-semibold text-lg md:text-2xl">My Virtual Machines</h1>
           <Button 

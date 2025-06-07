@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
@@ -8,6 +8,7 @@ import { Button } from "~/components/ui/button";
 interface CreditsData {
   credits: {
     currentBalance: number;
+    storedBalance?: number;
     monthlyAllocation: number;
     totalEarned: number;
     totalSpent: number;
@@ -15,6 +16,7 @@ interface CreditsData {
     nextAllocationDate: string;
     lastAllocationDate?: string;
   };
+  userPlan: string;
   usage: {
     thisMonth: number;
     total: number;
@@ -44,6 +46,12 @@ async function fetchCreditsData(): Promise<CreditsData> {
 }
 
 function formatDate(dateString: string) {
+  if (typeof window === 'undefined') {
+    // Server-side: use consistent ISO formatting to avoid hydration mismatch
+    const date = new Date(dateString);
+    return date.toISOString().split('T')[0];
+  }
+  // Client-side: use locale formatting
   return new Date(dateString).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -52,6 +60,12 @@ function formatDate(dateString: string) {
 }
 
 function formatDateTime(dateString: string) {
+  if (typeof window === 'undefined') {
+    // Server-side: use consistent ISO formatting to avoid hydration mismatch
+    const date = new Date(dateString);
+    return date.toISOString().replace('T', ' ').split('.')[0];
+  }
+  // Client-side: use locale formatting
   return new Date(dateString).toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -64,7 +78,7 @@ export default function CreditsDashboard() {
   const { data: creditsData, isLoading, error, refetch } = useQuery({
     queryKey: ['credits'],
     queryFn: fetchCreditsData,
-    refetchInterval: 30000, // Refresh every 30 seconds
+    refetchInterval: 30000, // Refresh every 30 seconds for live balance updates
   });
 
   if (isLoading) {
@@ -102,7 +116,7 @@ export default function CreditsDashboard() {
 
   if (!creditsData) return null;
 
-  const { credits, usage, transactions } = creditsData;
+  const { credits, usage, transactions, userPlan } = creditsData;
   const balanceColor = credits.currentBalance < 0 ? 'text-red-600' : 
                       credits.currentBalance < 50 ? 'text-orange-600' : 'text-green-600';
 
@@ -113,6 +127,7 @@ export default function CreditsDashboard() {
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
+            <CardDescription className="text-xs text-gray-500">Live balance reflecting VM usage</CardDescription>
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${balanceColor}`}>
@@ -122,6 +137,11 @@ export default function CreditsDashboard() {
               <Badge variant="destructive" className="mt-2">
                 Overdraft: {Math.abs(credits.currentBalance)} credits used
               </Badge>
+            )}
+            {credits.storedBalance && credits.storedBalance !== credits.currentBalance && (
+              <p className="text-xs text-gray-500 mt-1">
+                Database balance: {credits.storedBalance.toFixed(0)} credits
+              </p>
             )}
           </CardContent>
         </Card>
@@ -150,11 +170,11 @@ export default function CreditsDashboard() {
             <div className="text-2xl font-bold text-blue-600">
               +{credits.monthlyAllocation} credits
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 mt-1" suppressHydrationWarning>
               on {formatDate(credits.nextAllocationDate)}
             </p>
             <Badge variant="secondary" className="mt-2">
-              Free plan
+              {userPlan.charAt(0).toUpperCase() + userPlan.slice(1)} plan
             </Badge>
           </CardContent>
         </Card>
@@ -282,7 +302,7 @@ export default function CreditsDashboard() {
                       </Badge>
                       <span className="text-sm">{transaction.description}</span>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
+                    <div className="text-xs text-gray-500 mt-1" suppressHydrationWarning>
                       {formatDateTime(transaction.createdAt)}
                     </div>
                   </div>

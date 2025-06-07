@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { db } from "~/server/db";
 import { instances } from "~/server/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, isNull, and } from "drizzle-orm";
 import { env } from "~/env";
 
 export async function GET() {
@@ -13,10 +13,11 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Only show instances that haven't been soft deleted
     const userInstances = await db
       .select()
       .from(instances)
-      .where(eq(instances.userId, userId))
+      .where(and(eq(instances.userId, userId), isNull(instances.deletedAt)))
       .orderBy(instances.createdAt);
 
     return NextResponse.json(userInstances);

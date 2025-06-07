@@ -50,12 +50,20 @@ export default function RootLayout({
               </Link>
             </SignedOut>
             <SignedIn>
-              <UserButton
-                appearance={{
-                  elements: {
-                    userButtonAvatarBox: "w-10 h-10"
-                  }
-                }} />
+              <div className="flex items-center gap-4">
+                <Link 
+                  href="/dashboard/profile"
+                  className="text-white hover:text-gray-300 text-sm font-medium transition-colors"
+                >
+                  Profile
+                </Link>
+                <UserButton
+                  appearance={{
+                    elements: {
+                      userButtonAvatarBox: "w-10 h-10"
+                    }
+                  }} />
+              </div>
             </SignedIn>
           </header>
 

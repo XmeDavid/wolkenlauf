@@ -97,11 +97,14 @@ function RunningCostDisplay({ instance }: { instance: Instance }) {
       setRunningCost(totalCost);
     };
     
-    // Update cost immediately and then every 30 seconds
-    updateCost();
-    const interval = setInterval(updateCost, 30000);
+    // Delay initial calculation to avoid hydration mismatch
+    const timer = setTimeout(() => {
+      updateCost();
+      const interval = setInterval(updateCost, 30000);
+      return () => clearInterval(interval);
+    }, 100);
     
-    return () => clearInterval(interval);
+    return () => clearTimeout(timer);
   }, [instance.status, startTime]);
   
   if (instance.status !== "running") {

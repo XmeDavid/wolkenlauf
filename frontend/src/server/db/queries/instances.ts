@@ -16,7 +16,7 @@ export async function getUserInstances(userId: string): Promise<Instance[]> {
   return await db
     .select()
     .from(instances)
-    .where(eq(instances.userId, userId))
+    .where(and(eq(instances.userId, userId), isNull(instances.deletedAt)))
     .orderBy(desc(instances.createdAt));
 }
 
@@ -423,10 +423,21 @@ function getInstanceHourlyRate(provider: string, instanceType: string, useSpotIn
 
 // Calculate total cost for an instance based on runtime
 export function calculateInstanceCost(instance: Instance): { runtimeHours: number; cloudCostUsd: number; creditsCharged: number } {
-  const startTime = instance.launchedAt || instance.createdAt;
-  const endTime = instance.terminatedAt || new Date(); // Use current time if still running
+  // Only bill for time when instance was actually running
+  // If launchedAt is null, the instance never started running, so no charge
+  if (!instance.launchedAt) {
+    return {
+      runtimeHours: 0,
+      cloudCostUsd: 0,
+      creditsCharged: 0,
+    };
+  }
   
-  const runtimeMs = endTime.getTime() - startTime.getTime();
+  const startTime = new Date(instance.launchedAt);
+  const endTime = instance.terminatedAt ? new Date(instance.terminatedAt) : new Date(); // Use current time if still running
+  
+  // Ensure we don't charge for negative time (should not happen but safety check)
+  const runtimeMs = Math.max(0, endTime.getTime() - startTime.getTime());
   const runtimeHours = runtimeMs / (1000 * 60 * 60); // Convert to hours
   
   const hourlyRateUsd = getInstanceHourlyRate(instance.provider, instance.instanceType, instance.useSpotInstance ?? false);
@@ -464,10 +475,39 @@ export async function calculateUserUsage(userId: string, fromDate?: Date): Promi
     cost: calculateInstanceCost(instance)
   }));
 
-  // Calculate this month's usage (from instances created this month)
+  // Calculate this month's usage (from instances that ran ANY time during this month)
   const thisMonthUsage = instancesWithCosts
-    .filter(i => new Date(i.createdAt) >= startOfMonth)
-    .reduce((total, i) => total + i.cost.creditsCharged, 0);
+    .filter(i => {
+      // Only include instances that actually launched and ran during this month
+      if (!i.launchedAt) return false;
+      
+      const launchTime = new Date(i.launchedAt);
+      const endTime = i.terminatedAt ? new Date(i.terminatedAt) : now;
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      
+      // Include if instance ran any time during this month
+      return launchTime < endOfMonth && endTime >= startOfMonth;
+    })
+    .reduce((total, i) => {
+      // Calculate only the portion that ran this month
+      if (!i.launchedAt) return total;
+      
+      const launchTime = new Date(i.launchedAt);
+      const endTime = i.terminatedAt ? new Date(i.terminatedAt) : now;
+      const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      
+      // Get overlap with current month
+      const monthStart = Math.max(startOfMonth.getTime(), launchTime.getTime());
+      const monthEnd = Math.min(endOfMonth.getTime(), endTime.getTime());
+      
+      if (monthEnd > monthStart) {
+        const monthlyRuntimeHours = (monthEnd - monthStart) / (1000 * 60 * 60);
+        const hourlyRateUsd = getInstanceHourlyRate(i.provider, i.instanceType, i.useSpotInstance ?? false);
+        const monthlyCredits = monthlyRuntimeHours * hourlyRateUsd * 100 * 1.5; // 50% markup
+        return total + monthlyCredits;
+      }
+      return total;
+    }, 0);
 
   // Calculate total usage
   const totalUsage = instancesWithCosts
@@ -475,7 +515,7 @@ export async function calculateUserUsage(userId: string, fromDate?: Date): Promi
 
   // Count running VMs (excluding soft deleted)
   const runningVMs = instancesWithCosts
-    .filter(i => i.status === "running")
+    .filter(i => i.status === "running" && !i.deletedAt)
     .length;
 
   return {

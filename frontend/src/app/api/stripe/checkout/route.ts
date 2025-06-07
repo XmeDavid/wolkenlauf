@@ -12,11 +12,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { planId, creditAmount } = body;
+    const { type, planId, credits } = body;
 
     let session;
 
-    if (planId) {
+    if (type === 'subscription' && planId) {
       // Subscription checkout
       const plan = PRICING_PLANS.find(p => p.id === planId);
       
@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
           },
         ],
         mode: 'subscription',
-        success_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/profile?success=true&plan=${plan.id}`,
-        cancel_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/profile?canceled=true`,
+        success_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/subscription/success?session_id={CHECKOUT_SESSION_ID}&type=subscription&plan_name=${plan.name}`,
+        cancel_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/subscription/canceled`,
         metadata: {
           userId,
           planId: plan.id,
@@ -61,12 +61,12 @@ export async function POST(request: NextRequest) {
           },
         },
       });
-    } else if (creditAmount) {
+    } else if (type === 'credit_topup' && credits) {
       // Credit top-up checkout
-      const amount = parseInt(creditAmount);
+      const amount = typeof credits === 'number' ? credits : parseInt(String(credits));
       
-      if (isNaN(amount) || amount < 1 || amount > 100) {
-        return NextResponse.json({ error: 'Invalid credit amount. Must be between 1 and 100.' }, { status: 400 });
+      if (isNaN(amount) || amount < 1 || amount > 10000) {
+        return NextResponse.json({ error: 'Invalid credit amount. Must be between 1 and 10,000.' }, { status: 400 });
       }
 
       const totalPrice = amount * 0.01; // €0.01 per credit
@@ -91,8 +91,8 @@ export async function POST(request: NextRequest) {
           },
         ],
         mode: 'payment',
-        success_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/profile?success=true&credits=${amount}`,
-        cancel_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/profile?canceled=true`,
+        success_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/subscription/success?session_id={CHECKOUT_SESSION_ID}&type=credit_topup&credits=${amount}`,
+        cancel_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/subscription/canceled`,
         metadata: {
           userId,
           type: 'credit-topup',
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
         },
       });
     } else {
-      return NextResponse.json({ error: 'Missing planId or creditAmount' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
     return NextResponse.json({ url: session.url });
