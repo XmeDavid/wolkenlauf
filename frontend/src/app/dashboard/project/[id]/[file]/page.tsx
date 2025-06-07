@@ -1,6 +1,5 @@
 "use client";
 import { useState } from 'react';
-import Editor from '@monaco-editor/react';
 
 import ActionBar from '~/components/project/action-bar';
 
@@ -16,20 +15,17 @@ export default function FileView({
 }: FileViewProps){
     const [code, setCode] = useState(`${id} - ${file}`);
 
-    const handleEditorChange = (value?: string, event?: unknown) => {
-        if (value) setCode(value);
-    };
     return (
-        <section className="flex flex-col w-full">
+        <section className="flex flex-col w-full h-screen">
             <ActionBar/>
-            <Editor
-                height="100%"
-                defaultLanguage="javascript"
-                defaultValue="// some comment"
-                theme='vs-dark'
-                value={code}
-                onChange={handleEditorChange}
-            />
+            <div className="flex-1 p-4">
+                <textarea
+                    className="w-full h-full bg-gray-900 text-green-400 font-mono text-sm p-4 border rounded resize-none"
+                    placeholder="// File editor functionality temporarily simplified"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                />
+            </div>
         </section>
     );
 };

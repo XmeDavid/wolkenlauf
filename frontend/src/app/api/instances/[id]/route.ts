@@ -95,7 +95,7 @@ export async function DELETE(
       // Calculate final billing for the terminated VM
       try {
         const updatedInstance = await getInstance(instanceId, userId);
-        if (updatedInstance && updatedInstance.launchedAt) {
+        if (updatedInstance?.launchedAt) {
           const cost = calculateInstanceCost(updatedInstance);
           
           if (cost.creditsCharged > 0) {
