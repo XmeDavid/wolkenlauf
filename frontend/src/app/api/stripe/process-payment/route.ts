@@ -37,7 +37,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Payment not completed' }, { status: 400 });
     }
 
-    const { type, planId, credits: creditAmount } = session.metadata || {};
+    const { type, planId, creditAmount } = session.metadata || {};
+    
+    console.log('Processing payment for session:', {
+      sessionId,
+      userId,
+      paymentStatus: session.payment_status,
+      metadata: session.metadata,
+      type,
+      planId,
+      creditAmount
+    });
 
     if (type === 'subscription' && planId) {
       // Handle subscription purchase
@@ -97,20 +107,35 @@ export async function POST(request: NextRequest) {
       const credits = parseInt(creditAmount);
       console.log(`Processing credit top-up for user ${userId}, ${credits} credits`);
 
-      await addCredits(
-        userId,
-        credits,
-        'topup',
-        `Credit top-up: ${credits} credits`
-      );
+      try {
+        await addCredits(
+          userId,
+          credits,
+          'topup',
+          `Credit top-up: ${credits} credits`
+        );
+        console.log(`✅ Successfully added ${credits} credits to user ${userId} via manual processing`);
 
-      return NextResponse.json({ 
-        success: true, 
-        message: `Successfully added ${credits} credits`,
-        credits: credits
-      });
+        return NextResponse.json({ 
+          success: true, 
+          message: `Successfully added ${credits} credits`,
+          credits: credits
+        });
+      } catch (error) {
+        console.error(`❌ Failed to add credits to user ${userId}:`, error);
+        return NextResponse.json({ 
+          error: 'Failed to add credits',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        }, { status: 500 });
+      }
 
     } else {
+      console.log('No matching payment type found:', {
+        type,
+        planId,
+        creditAmount,
+        availableKeys: Object.keys(session.metadata || {})
+      });
       return NextResponse.json({ error: 'Invalid session metadata' }, { status: 400 });
     }
 

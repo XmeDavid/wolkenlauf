@@ -41,6 +41,16 @@ export async function POST(request: NextRequest) {
         const session = event.data.object;
         const { userId, planId, type, creditAmount } = session.metadata || {};
 
+        console.log('Webhook checkout.session.completed:', {
+          sessionId: session.id,
+          userId,
+          type,
+          planId,
+          creditAmount,
+          paymentStatus: session.payment_status,
+          metadata: session.metadata
+        });
+
         if (!userId) {
           console.error('No userId in session metadata');
           break;
@@ -98,12 +108,24 @@ export async function POST(request: NextRequest) {
           const credits = parseInt(creditAmount);
           console.log(`Credit top-up completed for user ${userId}, ${credits} credits`);
 
-          await addCredits(
-            userId,
-            credits,
-            'topup',
-            `Credit top-up: ${credits} credits`
-          );
+          try {
+            await addCredits(
+              userId,
+              credits,
+              'topup',
+              `Credit top-up: ${credits} credits`
+            );
+            console.log(`✅ Successfully added ${credits} credits to user ${userId} via webhook`);
+          } catch (error) {
+            console.error(`❌ Failed to add credits to user ${userId}:`, error);
+          }
+        } else {
+          console.log('Unhandled checkout session type or missing metadata:', {
+            type,
+            planId,
+            creditAmount,
+            hasUserId: !!userId
+          });
         }
         break;
       }

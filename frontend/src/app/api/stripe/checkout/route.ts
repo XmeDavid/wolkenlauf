@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         cancel_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.vercel.app'}/dashboard/subscription/canceled`,
         metadata: {
           userId,
-          type: 'credit-topup',
+          type: 'credit_topup',
           creditAmount: amount.toString(),
         },
       });
