@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       }
 
       session = await stripe.checkout.sessions.create({
-        customer_email: undefined, // Let Stripe collect email
+        customer_email: undefined,
         line_items: [
           {
             price_data: {
