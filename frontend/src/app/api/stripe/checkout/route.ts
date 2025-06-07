@@ -47,8 +47,8 @@ export async function POST(request: NextRequest) {
           },
         ],
         mode: 'subscription',
-        success_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/subscription/success?session_id={CHECKOUT_SESSION_ID}&type=subscription&plan_name=${plan.name}`,
-        cancel_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/subscription/canceled`,
+        success_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.vercel.app'}/dashboard/subscription/success?session_id={CHECKOUT_SESSION_ID}&type=subscription&plan_name=${plan.name}`,
+        cancel_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.vercel.app'}/dashboard/subscription/canceled`,
         metadata: {
           userId,
           planId: plan.id,
@@ -91,8 +91,8 @@ export async function POST(request: NextRequest) {
           },
         ],
         mode: 'payment',
-        success_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/subscription/success?session_id={CHECKOUT_SESSION_ID}&type=credit_topup&credits=${amount}`,
-        cancel_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.com'}/dashboard/subscription/canceled`,
+        success_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.vercel.app'}/dashboard/subscription/success?session_id={CHECKOUT_SESSION_ID}&type=credit_topup&credits=${amount}`,
+        cancel_url: `${env.NODE_ENV === 'development' ? 'http://localhost:3000' : 'https://wolkenlauf.vercel.app'}/dashboard/subscription/canceled`,
         metadata: {
           userId,
           type: 'credit-topup',
